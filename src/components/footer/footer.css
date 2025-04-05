@@ -1,0 +1,87 @@
+.footer-container {
+    display: flex ;
+    align-items: center;
+    justify-content: center;
+    background-color: #18181A;
+    padding-bottom: 120px;
+    height: max-content;
+}
+
+.footer-wrapper{
+    display: flex ;
+    justify-content: space-between;
+    background-color: #18181A;
+    height: 20vh;
+    width: 90%;
+    padding: 20px 0px;
+}
+
+.footer-left{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.footer-left-title {
+    display: flex;
+    align-items: flex-start;
+}
+
+.footer-left-description{
+    color: rgb(219, 219, 219);
+    font-size: 0.8rem;
+    text-align: start;
+}
+
+.footer-right {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.footer-right-title{
+    font-size: 1.5vw;
+    margin-bottom: 10px;
+}
+
+.footer-right-link {
+    color: rgb(219, 219, 219);
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+    cursor: pointer;
+}
+
+.footer-left-social{
+    display: flex;
+    /* margin-top: 10px; */
+    gap: 10px;
+    color: rgb(219, 219, 219);
+}
+
+.social-icon{
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.whatsapp{
+    width: 25px;
+    height: 25px;
+    color: red;
+}
+
+.youtube{
+    width: 25px;
+    height: 25px;
+}
+
+.insta{
+    width: 25px;
+    height: 25px;
+}
+
+.social-icon:hover{
+    scale: 1.2;
+}

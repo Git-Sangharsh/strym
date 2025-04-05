@@ -1,0 +1,50 @@
+.nav-container{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 8vh;
+    /* border-bottom: 1px solid rgba(255, 255, 255, 0.499); */
+    position: fixed;
+    top: 0;
+    z-index: 999;
+    background-color: #18181a56;
+    background-color: rgba(24, 24, 26, 0.34); /* Adjust opacity for better blur effect */
+    backdrop-filter: blur(10px); /* Adjust the blur intensity */
+}
+
+.nav-wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+    width: 90%;
+}
+
+.nav-items{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-direction: row;
+}
+
+.nav-item{
+    cursor: pointer;
+}
+
+.nav-button{
+    padding: 0.5vw  1.5vw;
+    cursor: pointer;
+    background-color: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.499)   ;
+    transition: 0.3s;
+    border-radius: 3px;
+}
+
+.nav-button:hover{
+    backdrop-filter: blur(10px);
+    background-color: whitesmoke;
+    color: black;
+}

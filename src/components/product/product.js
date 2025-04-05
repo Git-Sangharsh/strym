@@ -104,7 +104,7 @@ const Product = () => {
     <div className="product-container">
       <div className="product-container-title">
         <h1>Trending</h1>
-        <h1 className="product-clr">Music Beats.</h1>
+        <h1 className="product-clr">Music.</h1>
       </div>
 
       <div className="product-wrapper">

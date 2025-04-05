@@ -9,7 +9,7 @@ const Hero = () => {
         <div className='hero-container'>
 
             <div className="hero-inner-container">
-                <h1 className='hero-title'>S-Beats For Beasts!</h1>
+                <h1 className='hero-title'>Strym For Beasts!</h1>
                 <div className='hero-bg'></div>
             </div>
 

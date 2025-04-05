@@ -19,7 +19,7 @@ const Footer = () => {
         <div className="footer-wrapper">
 
         <div className="footer-left">
-            <h1 className='footer-left-title'>S-BEATS</h1>
+            <h1 className='footer-left-title'>STRYM</h1>
             <h6 className='footer-left-description'>Discover the best beats for your next project. Our beats are designed to help you create a unique and professional sound.</h6>
             <h6 className='footer-left-description'>Contact To Get Full Access To All Beats.</h6>
 

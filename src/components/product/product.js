@@ -14,7 +14,6 @@ const Product = () => {
   const [playingIndex, setPlayingIndex] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayback, setIsPlayback] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
@@ -179,8 +178,6 @@ const Product = () => {
           <div key={item._id} className="product-box">
             <div
               className="product-image-container"
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
             >
               <img
                 src={`${process.env.REACT_APP_BACKEND_API}${item.image}`}
@@ -189,16 +186,16 @@ const Product = () => {
               />
               <img
                 src={
-                  isPlaying && playingIndex === index && hoveredIndex === index
+                  isPlaying && playingIndex === index
                     ? pauseIcon
                     : playIcon
                 }
                 alt="Play/Pause"
-                className="play-button"
+                className={`play-button ${(playingIndex === index && isPlaying) ? 'play-button-visible' : ''}`}
                 onClick={() => handlePlay(index)}
               />
               <div
-                className="product-image-overlay"
+                className={`product-image-overlay ${(playingIndex === index && isPlaying) ? 'active' : ''}`}
                 onClick={() => handlePlay(index)}
               ></div>
             </div>

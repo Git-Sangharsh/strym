@@ -219,7 +219,7 @@ audio {
 }
 
 .active-loop {
-    filter: brightness(1.3);
+    filter: brightness(1.9);
     transform: scale(1.1);
   }
 
@@ -231,6 +231,34 @@ audio {
     justify-content: space-between;
     gap: 10px   ;
 }
+
+.product-image-overlay {
+    /* Your existing overlay styles */
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.3s ease;
+  }
+
+  .product-image-overlay.active {
+    opacity: 1;
+  }
+
+existing hover styles */
+  .product-image-container:hover .product-image-overlay {
+    opacity: 1;
+  }
+
+  .play-button {
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.3s ease;
+  }
+
+  .play-button-visible {
+    opacity: 1 !important; /* Always visible for the playing song */
+  }
+
+  .product-image-container:hover .play-button {
+    opacity: 1;
+  }
 
 
 /* Responsive Design */

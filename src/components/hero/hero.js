@@ -30,7 +30,7 @@ const Hero = () => {
 
             <div className='hero-browse-container'>
                 <h6 className="hero-browse">
-                    Experience Nonstop Music Anytime, Anywhere — 100% Free Only on S-Beats.
+                    Experience Nonstop Music Anytime, Anywhere — 100% Free Only on STRYM.
                 </h6>
             </div>
 

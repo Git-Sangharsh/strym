@@ -5,14 +5,21 @@ import whatsapp from '../assets/whatsapp.svg';
 import youtube from '../assets/youtube.svg';
 import instagram from '../assets/instagram.svg';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+
 
 const Footer = () => {
+  const dispatch = useDispatch();
+
+  const toggleSuggest = () => {
+    dispatch({ type: 'SET_SHOW_SUGGEST' });
+  };
 
   const navigate = useNavigate();
 
   const handleAdmin = () => {
     navigate("/admin")
-  }
+  };
 
   return (
     <div  className='footer-container'>
@@ -24,6 +31,7 @@ const Footer = () => {
             <h6 className='footer-left-description'>Contact To Get Full Access To All Beats.</h6>
 
             <div className="footer-left-social">
+            <h4 className='footer-right-link' onClick={toggleSuggest} >Suggest Music</h4>
             <h4 className='footer-right-link' onClick={handleAdmin}>Admin</h4>
             <h4 className='footer-right-link'>Contact Us</h4>
             <h4 className='footer-right-link'>About Us</h4>

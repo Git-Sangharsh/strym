@@ -17,6 +17,8 @@ const Product = () => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isLooping, setIsLooping] = useState(false);
+  const [shuffleMode, setShuffleMode] = useState(false);
 
   const audioRefs = useRef([]);
 
@@ -66,6 +68,7 @@ const Product = () => {
 
     if (!audioRefs.current[index]) {
       const audio = new Audio(audioSrc);
+      audio.loop = isLooping;
       audioRefs.current[index] = audio;
 
       audio.addEventListener("ended", () => setIsPlaying(false));
@@ -73,6 +76,14 @@ const Product = () => {
       audio.addEventListener("timeupdate", () => {
         setCurrentTime(audio.currentTime);
         setDuration(audio.duration || 0);
+      });
+
+      audio.addEventListener("ended", () => {
+        if (shuffleMode) {
+          playRandomSong(index);
+        } else {
+          setIsPlaying(false);
+        }
       });
     }
 
@@ -120,14 +131,35 @@ const Product = () => {
     }
   };
 
-  // Listen for route changes
+  const handleLoopToggle = () => {
+    setIsLooping((prev) => {
+      const newLoopingState = !prev;
+      if (playingIndex !== null && audioRefs.current[playingIndex]) {
+        audioRefs.current[playingIndex].loop = newLoopingState;
+      }
+      return newLoopingState;
+    });
+  };
+
+  const handleShuffleToggle = () => {
+    setShuffleMode(!shuffleMode);
+  };
+
+  const playRandomSong = (currentIndex) => {
+    if (api.length <= 1) return;
+
+    let randomIndex = Math.floor(Math.random() * api.length);
+    while (randomIndex === currentIndex) {
+      randomIndex = Math.floor(Math.random() * api.length);
+    }
+    handlePlay(randomIndex);
+  };
+
   useEffect(() => {
-    // This will help detect route changes in react-router
     const handleRouteChange = () => {
       stopAllAudio();
     };
 
-    // Add event listener for route changes
     window.addEventListener("popstate", handleRouteChange);
 
     return () => {
@@ -184,11 +216,13 @@ const Product = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="playback-container">
-          <img
-              className="playback-play-icon loop-icon"
+            <img
+              className={`playback-play-icon loop-icon ${
+                shuffleMode ? "active-loop" : ""
+              }`}
               src={shuffleIcon}
               alt=""
-              onClick={handlePrevious}
+              onClick={handleShuffleToggle}
             />
             <img
               className="playback-play-icon next-previous-icon"
@@ -208,11 +242,13 @@ const Product = () => {
               alt=""
               onClick={handleNext}
             />
-              <img
-              className="playback-play-icon loop-icon"
+            <img
+              className={`playback-play-icon loop-icon ${
+                isLooping ? "active-loop" : ""
+              }`}
               src={loopIcon}
               alt=""
-              onClick={handleNext}
+              onClick={handleLoopToggle}
             />
           </div>
           {playingIndex !== null && (

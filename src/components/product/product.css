@@ -215,7 +215,13 @@ audio {
 .loop-icon{
     width: 20px !important;
     height: 20px !important;
+    transition: all 0.3s ease-in-out;
 }
+
+.active-loop {
+    filter: brightness(1.3);
+    transform: scale(1.1);
+  }
 
 .playback-container{
     /* border: 3px solid  red; */
@@ -225,6 +231,8 @@ audio {
     justify-content: space-between;
     gap: 10px   ;
 }
+
+
 /* Responsive Design */
 @media screen and (max-width: 1200px) {
     .product-box {

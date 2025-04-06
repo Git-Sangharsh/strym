@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 import "./product.css";
 import playIcon from "../assets/play.svg";
 import pauseIcon from "../assets/pause.svg";
 import nextIcon from "../assets/next.svg";
 import previousIcon from "../assets/previous.svg";
-import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+import loopIcon from "../assets/loop.svg";
+import shuffleIcon from "../assets/shuffle.svg";
 
 const Product = () => {
   const [api, setApi] = useState([]);
@@ -32,7 +34,25 @@ const Product = () => {
     };
 
     fetchTracks();
+
+    // Cleanup function to stop all audio when component unmounts
+    return () => {
+      stopAllAudio();
+    };
   }, []);
+
+  // Function to stop all audio
+  const stopAllAudio = () => {
+    audioRefs.current.forEach((audio) => {
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    });
+    setIsPlaying(false);
+    setPlayingIndex(null);
+    setIsPlayback(false);
+  };
 
   const formatTime = (time) => {
     if (!time || isNaN(time)) return "0:00";
@@ -100,6 +120,21 @@ const Product = () => {
     }
   };
 
+  // Listen for route changes
+  useEffect(() => {
+    // This will help detect route changes in react-router
+    const handleRouteChange = () => {
+      stopAllAudio();
+    };
+
+    // Add event listener for route changes
+    window.addEventListener("popstate", handleRouteChange);
+
+    return () => {
+      window.removeEventListener("popstate", handleRouteChange);
+    };
+  }, []);
+
   return (
     <div className="product-container">
       <div className="product-container-title">
@@ -149,6 +184,12 @@ const Product = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="playback-container">
+          <img
+              className="playback-play-icon loop-icon"
+              src={shuffleIcon}
+              alt=""
+              onClick={handlePrevious}
+            />
             <img
               className="playback-play-icon next-previous-icon"
               src={previousIcon}
@@ -164,6 +205,12 @@ const Product = () => {
             <img
               className="playback-play-icon next-previous-icon"
               src={nextIcon}
+              alt=""
+              onClick={handleNext}
+            />
+              <img
+              className="playback-play-icon loop-icon"
+              src={loopIcon}
               alt=""
               onClick={handleNext}
             />

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './hero.css';
 import apiResponse from '../api/api'; // Renamed to avoid conflict
 
 const Hero = () => {
-    const [data, setData] = useState(apiResponse.slice(4, 8)); // Renamed state variable
+    // const [data, setData] = useState(apiResponse.slice(4, 8)); // Renamed state variable
+    const data = apiResponse.slice(4, 8)
 
     return (
         <div className='hero-container'>

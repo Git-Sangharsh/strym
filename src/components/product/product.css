@@ -212,6 +212,11 @@ audio {
     cursor: pointer;
 }
 
+.loop-icon{
+    width: 20px !important;
+    height: 20px !important;
+}
+
 .playback-container{
     /* border: 3px solid  red; */
     display: flex;

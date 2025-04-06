@@ -11,6 +11,9 @@
     background-color: #18181a56;
     background-color: rgba(24, 24, 26, 0.34); /* Adjust opacity for better blur effect */
     backdrop-filter: blur(10px); /* Adjust the blur intensity */
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
 .nav-wrapper{

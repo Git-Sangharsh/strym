@@ -10,6 +10,7 @@ import ProtectedRoute from "./components/protectedroute/protectedroute";
 import Trash from "./components/trash/trash";
 import Suggest from "./components/suggest/suggest";
 // import Suggest from "./components/suggest/suggest";
+
 function App() {
   return (
     <Router>
@@ -20,7 +21,9 @@ function App() {
             <div className="App">
               <Navbar />
               <Hero />
-              <Product />
+              <div id="tracks">
+                <Product />
+              </div>
               <Suggest />
               <Footer />
             </div>

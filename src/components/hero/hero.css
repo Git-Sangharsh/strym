@@ -107,7 +107,7 @@
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    border: 2px solid black;
+    /* border: 2px solid black; */
   }
 
 .hero-description{

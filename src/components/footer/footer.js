@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React
+from 'react';
 import './footer.css';
 import whatsapp from '../assets/whatsapp.svg';
 import youtube from '../assets/youtube.svg';
@@ -27,8 +28,8 @@ const Footer = () => {
 
         <div className="footer-left">
             <h1 className='footer-left-title'>STRYM</h1>
-            <h6 className='footer-left-description'>Discover the best beats for your next project. Our beats are designed to help you create a unique and professional sound.</h6>
-            <h6 className='footer-left-description'>Contact To Get Full Access To All Beats.</h6>
+            <h6 className='footer-left-description'>Discover free, high-quality beats on Strym — no ads, no interruptions, just pure sound.</h6>
+            <h6 className='footer-left-description'>Silence the noise. Strym delivers music that speaks.</h6>
 
             <div className="footer-left-social">
             <h4 className='footer-right-link' onClick={toggleSuggest} >Suggest Music</h4>

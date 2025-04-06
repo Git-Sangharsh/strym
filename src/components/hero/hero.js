@@ -1,42 +1,65 @@
-import React from 'react';
-import './hero.css';
-import apiResponse from '../api/api'; // Renamed to avoid conflict
+import React, { useEffect, useState } from "react";
+import "./hero.css";
+import axios from "axios";
 
 const Hero = () => {
-    // const [data, setData] = useState(apiResponse.slice(4, 8)); // Renamed state variable
-    const data = apiResponse.slice(4, 8)
 
-    return (
-        <div className='hero-container'>
+  const [trackThumbnail, setTrackThumbnail] = useState([]);
 
-            <div className="hero-inner-container">
-                <h1 className='hero-title'>Strym For Beasts!</h1>
-                <div className='hero-bg'></div>
-            </div>
+  useEffect(() => {
+    const fetchThumbnail = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_API}/tracks`);
+        const allTracks = response.data;
 
-            <div className="hero-container-box">
-                <div className="hero-inner-container-box">
-                    {/* Replacing Image with hero-box */}
-                    {/* <div className="hero-box"></div>
+        // Shuffle array
+        const shuffled = allTracks.sort(() => 0.5 - Math.random());
+
+        //first 4 random tracks
+        const randomFour = shuffled.slice(0, 4);
+
+        setTrackThumbnail(randomFour);
+        console.log("Random Thumbnail:", randomFour);
+      } catch (error) {
+        console.error("Error fetching thumbnails:", error);
+      }
+    };
+
+    fetchThumbnail();
+  }, []);
+  return (
+    <div className="hero-container">
+      <div className="hero-inner-container">
+        <h1 className="hero-title">Strym For Beasts!</h1>
+        <div className="hero-bg"></div>
+      </div>
+
+      <div className="hero-container-box">
+        <div className="hero-inner-container-box">
+          {/* Replacing Image with hero-box */}
+          {/* <div className="hero-box"></div>
                     <div className="hero-box"></div>
                     <div className="hero-box"></div>
                     <div className="hero-box"></div> */}
-                    {data.map((i) => (
-                        <div className="hero-box">
-                            <img className='hero-box' src={i.beatImage} alt={i.beatType} />
-                        </div>
-                    ))}
-                </div>
+          {trackThumbnail.map((i) => (
+            <div className="hero-box">
+              <img
+                src={`${process.env.REACT_APP_BACKEND_API}${i.image}`}
+                alt={i.title}
+                className="hero-box"
+              />{" "}
             </div>
-
-            <div className='hero-browse-container'>
-                <h6 className="hero-browse">
-                    Experience Nonstop Music Anytime, Anywhere — 100% Free Only on STRYM.
-                </h6>
-            </div>
-
+          ))}
         </div>
-    );
-}
+      </div>
+
+      <div className="hero-browse-container">
+        <h6 className="hero-browse">
+          Experience Nonstop Music Anytime, Anywhere — 100% Free Only on STRYM.
+        </h6>
+      </div>
+    </div>
+  );
+};
 
 export default Hero;

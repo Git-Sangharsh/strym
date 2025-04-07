@@ -46,7 +46,7 @@ const Hero = () => {
             trackThumbnail.map((i) => (
               <div className="hero-box">
                 <img
-                  src={`${process.env.REACT_APP_BACKEND_API}${i.image}`}
+                  src={`${i.image}`}
                   alt={i.title}
                   className="hero-box"
                 />{" "}

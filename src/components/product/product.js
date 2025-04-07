@@ -63,7 +63,7 @@ const Product = () => {
   };
 
   const handlePlay = (index) => {
-    const audioSrc = `${process.env.REACT_APP_BACKEND_API}${api[index].audio}`;
+    const audioSrc = api[index].audio;
 
     if (!audioRefs.current[index]) {
       const audio = new Audio(audioSrc);
@@ -176,15 +176,18 @@ const Product = () => {
       <div className="product-wrapper">
         {api.length > 0 ? (
           api.map((item, index) => (
+            // console.log("Image path:", item.image),
+
             <div key={item._id} className="product-box">
               <div
                 className="product-image-container"
               >
                 <img
-                  src={`${process.env.REACT_APP_BACKEND_API}${item.image}`}
+                  src={item.image}
                   alt={item.title}
                   className="product-image"
                 />
+
                 <img
                   src={
                     isPlaying && playingIndex === index

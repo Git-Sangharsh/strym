@@ -242,7 +242,7 @@ audio {
     opacity: 1;
   }
 
-existing hover styles */
+/* existing hover styles */
   .product-image-container:hover .product-image-overlay {
     opacity: 1;
   }

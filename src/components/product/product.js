@@ -174,35 +174,60 @@ const Product = () => {
       </div>
 
       <div className="product-wrapper">
-        {api.map((item, index) => (
-          <div key={item._id} className="product-box">
-            <div
-              className="product-image-container"
-            >
-              <img
-                src={`${process.env.REACT_APP_BACKEND_API}${item.image}`}
-                alt={item.title}
-                className="product-image"
-              />
-              <img
-                src={
-                  isPlaying && playingIndex === index
-                    ? pauseIcon
-                    : playIcon
-                }
-                alt="Play/Pause"
-                className={`play-button ${(playingIndex === index && isPlaying) ? 'play-button-visible' : ''}`}
-                onClick={() => handlePlay(index)}
-              />
+        {api.length > 0 ? (
+          api.map((item, index) => (
+            <div key={item._id} className="product-box">
               <div
-                className={`product-image-overlay ${(playingIndex === index && isPlaying) ? 'active' : ''}`}
-                onClick={() => handlePlay(index)}
-              ></div>
+                className="product-image-container"
+              >
+                <img
+                  src={`${process.env.REACT_APP_BACKEND_API}${item.image}`}
+                  alt={item.title}
+                  className="product-image"
+                />
+                <img
+                  src={
+                    isPlaying && playingIndex === index
+                      ? pauseIcon
+                      : playIcon
+                  }
+                  alt="Play/Pause"
+                  className={`play-button ${(playingIndex === index && isPlaying) ? 'play-button-visible' : ''}`}
+                  onClick={() => handlePlay(index)}
+                />
+                <div
+                  className={`product-image-overlay ${(playingIndex === index && isPlaying) ? 'active' : ''}`}
+                  onClick={() => handlePlay(index)}
+                ></div>
+              </div>
+              <h3 className="product-title">{item.title}</h3>
+              <h6 className="product-by">By {item.singer}</h6>
             </div>
-            <h3 className="product-title">{item.title}</h3>
-            <h6 className="product-by">By {item.singer}</h6>
-          </div>
-        ))}
+          ))
+        ) : (
+          <>
+            <div className="product-box">
+              <div className="product-image-container skeleton" style={{height: "300px"}}></div>
+              <div className="product-title skeleton" style={{height: "20px", marginTop: "10px", width: "80%"}}></div>
+              <div className="product-by skeleton" style={{height: "15px", marginTop: "10px", width: "60%"}}></div>
+            </div>
+            <div className="product-box">
+              <div className="product-image-container skeleton" style={{height: "300px"}}></div>
+              <div className="product-title skeleton" style={{height: "20px", marginTop: "10px", width: "80%"}}></div>
+              <div className="product-by skeleton" style={{height: "15px", marginTop: "10px", width: "60%"}}></div>
+            </div>
+            <div className="product-box">
+              <div className="product-image-container skeleton" style={{height: "300px"}}></div>
+              <div className="product-title skeleton" style={{height: "20px", marginTop: "10px", width: "80%"}}></div>
+              <div className="product-by skeleton" style={{height: "15px", marginTop: "10px", width: "60%"}}></div>
+            </div>
+            <div className="product-box">
+              <div className="product-image-container skeleton" style={{height: "300px"}}></div>
+              <div className="product-title skeleton" style={{height: "20px", marginTop: "10px", width: "80%"}}></div>
+              <div className="product-by skeleton" style={{height: "15px", marginTop: "10px", width: "60%"}}></div>
+            </div>
+          </>
+        )}
       </div>
 
       <AnimatePresence>

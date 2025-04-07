@@ -6,7 +6,7 @@ const Hero = () => {
 
   const [trackThumbnail, setTrackThumbnail] = useState([]);
 
-  
+
   useEffect(() => {
     const fetchThumbnail = async () => {
       try {
@@ -42,15 +42,24 @@ const Hero = () => {
                     <div className="hero-box"></div>
                     <div className="hero-box"></div>
                     <div className="hero-box"></div> */}
-          {trackThumbnail.map((i) => (
-            <div className="hero-box">
-              <img
-                src={`${process.env.REACT_APP_BACKEND_API}${i.image}`}
-                alt={i.title}
-                className="hero-box"
-              />{" "}
-            </div>
-          ))}
+          {trackThumbnail.length > 0 ? (
+            trackThumbnail.map((i) => (
+              <div className="hero-box">
+                <img
+                  src={`${process.env.REACT_APP_BACKEND_API}${i.image}`}
+                  alt={i.title}
+                  className="hero-box"
+                />{" "}
+              </div>
+            ))
+          ) : (
+            <>
+              <div className="hero-box skeleton"></div>
+              <div className="hero-box skeleton"></div>
+              <div className="hero-box skeleton"></div>
+              <div className="hero-box skeleton"></div>
+            </>
+          )}
         </div>
       </div>
 

@@ -6,6 +6,7 @@ const Hero = () => {
 
   const [trackThumbnail, setTrackThumbnail] = useState([]);
 
+  
   useEffect(() => {
     const fetchThumbnail = async () => {
       try {

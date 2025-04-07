@@ -1,19 +1,22 @@
 import React, { useState } from "react";
 import axios from "axios";
 import "./upload.css";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Upload = () => {
   const [title, setTitle] = useState("");
   const [singer, setSinger] = useState("");
   const [image, setImage] = useState(null);
   const [audio, setAudio] = useState(null);
-  const [msg, setMsg] = useState("");
+  // const [msg, setMsg] = useState("");
 
   const handleUpload = async (e) => {
     e.preventDefault();
 
     if (!title || !singer || !image || !audio) {
-      return setMsg("All fields are required!");
+      toast.error("All fields are required!");
+      return;
     }
 
     const formData = new FormData();
@@ -34,18 +37,19 @@ const Upload = () => {
           },
         }
       );
-
-      setMsg(res.data.message);
-      setTitle("");
-      setSinger("");
-      setImage(null);
-      setAudio(null);
+      if (res.status === 201) {
+        setTitle("");
+        setSinger("");
+        setImage(null);
+        setAudio(null);
+        toast.success("Upload successful! 🎶");
+      }
     } catch (err) {
       console.error("Upload error:", err);
       if (err.response && err.response.data?.error) {
-        setMsg(err.response.data.error);
+        toast.error(err.response.data.error);
       } else {
-        setMsg("Upload failed!");
+        toast.error("Upload failed! 🎶");
       }
     }
   };
@@ -86,8 +90,8 @@ const Upload = () => {
         />
 
         <button type="submit">Upload</button>
-        <p className="upload-msg">{msg}</p>
       </form>
+      <ToastContainer position="bottom-right" autoClose={6000} />
     </div>
   );
 };

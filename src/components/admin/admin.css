@@ -53,6 +53,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s ease;
+  margin-bottom: 1rem;
 }
 
 .admin-form button:hover {
@@ -72,11 +73,13 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 10px;
+  /* gap: 10px; */
 }
 
 .admin-btn {
   width: 100%;
+  margin-bottom: 1rem;
+
 }
 
 /* Responsive adjustments */

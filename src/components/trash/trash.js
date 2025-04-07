@@ -68,7 +68,7 @@ const Trash = () => {
               layout
             >
               <img
-                src={`http://localhost:3000${i.image}`}
+                src={`${process.env.REACT_APP_BACKEND_API}${i.image}`}
                 alt={i.title}
                 className="trash-image"
               />

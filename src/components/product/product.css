@@ -19,9 +19,11 @@
     align-items: flex-start;
     justify-content: flex-start;
     gap: 10px;
-    width: 90%; /* Match product-wrapper width */
+    width: 95%; /* Match product-wrapper width */
     margin: 4vh 0vh;
     margin-bottom: 0vh;
+    font-size: 1rem;
+
 }
 
 .product-clr {
@@ -35,7 +37,7 @@
     align-items: center;
     justify-content: flex-start; /* Align with title */
     gap: 20px;
-    width: 90%; /* Match .product-container-title */
+    width: 95%; /* Match .product-container-title */
 }
 
 /* Product Box (4 per row) */
@@ -304,7 +306,7 @@ audio {
         cursor: pointer;
     }
     .product-container-title{
-        font-size: 1vw;
+        /* font-size: 1vw; */
         margin: 1.5vw  0vw;
         margin-bottom: 0vh;
         width: 90%;

@@ -11,6 +11,7 @@ import shuffleIcon from "../assets/shuffle.svg";
 import sortIcon from "../assets/sort.svg";
 const Product = () => {
   const [api, setApi] = useState([]);
+  const [originalData, setOriginalData] = useState([]); // Store original data for filtering
   const [playingIndex, setPlayingIndex] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayback, setIsPlayback] = useState(false);
@@ -19,6 +20,7 @@ const Product = () => {
   const [isLooping, setIsLooping] = useState(false);
   const [shuffleMode, setShuffleMode] = useState(false);
   const [isSorted, setIsSorted] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(""); // New state for search term
 
   const audioRefs = useRef([]);
 
@@ -30,6 +32,7 @@ const Product = () => {
         );
         console.log("Fetched:", response.data);
         setApi(response.data);
+        setOriginalData(response.data); // Save original data
       } catch (err) {
         console.error("Error fetching tracks", err);
       }
@@ -42,6 +45,22 @@ const Product = () => {
       stopAllAudio();
     };
   }, []);
+
+  // Filter data when search term changes
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      // If search term is empty, show all tracks
+      setApi(originalData);
+    } else {
+      // Filter tracks based on title or singer name
+      const filteredData = originalData.filter(
+        (track) =>
+          track.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          track.singer.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setApi(filteredData);
+    }
+  }, [searchTerm, originalData]);
 
   // Function to stop all audio
   const stopAllAudio = () => {
@@ -61,6 +80,11 @@ const Product = () => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
   };
 
   // Define handlers first before they're used
@@ -225,7 +249,6 @@ const Product = () => {
           <h1 className="product-clr">Music.</h1>
         </div>
         <div className="sort">
-          {/* Sort {isSorted ? "Z-A" : "A-Z"} */}
           <img
             onClick={handleSort}
             className={`sort-icon ${isSorted ? "bg-pad" : ""}`}
@@ -235,9 +258,16 @@ const Product = () => {
         </div>
       </div>
       <div className="product-search">
-        <input className="search-input" type="text" placeholder="Search" />
+        <input
+          className="search-input"
+          type="text"
+          placeholder="Search by title or artist"
+          value={searchTerm}
+          onChange={handleSearchChange}
+        />
       </div>
-      <div className="product-wrapper">
+      <div   className={`product-wrapper ${searchTerm.trim() !== "" ? "product-wrapper-search" : ""}`}
+      >
         {api.length > 0 ? (
           api.map((item, index) => (
             <div key={item._id} className="product-box">
@@ -271,6 +301,8 @@ const Product = () => {
               <h6 className="product-by">By {item.singer}</h6>
             </div>
           ))
+        ) : searchTerm ? (
+          <div className="no-results">No results found for "{searchTerm}"</div>
         ) : (
           <>
             <div className="product-box">
@@ -376,7 +408,7 @@ const Product = () => {
               onClick={handleLoopToggle}
             />
           </div>
-          {playingIndex !== null && (
+          {playingIndex !== null && api[playingIndex] && (
             <h6 className="playing-track-name">
               {api[playingIndex].title} - {api[playingIndex].singer}
             </h6>

@@ -36,10 +36,16 @@
     flex-wrap: wrap; /* Ensures responsiveness */
     align-items: center;
     justify-content: center; /* Align with title */
+
     gap: 20px;
     width: 95%; /* Match .product-container-title */
 }
 
+.product-wrapper-search{
+    justify-content: flex-start;
+    width: 93.8%; /* Match .product-container-title */
+
+}
 /* Product Box (4 per row) */
 .product-box {
     display: flex;
@@ -298,7 +304,7 @@ audio {
   }
 
   .product-search{
-    width: 93%;
+    width: 93.8%;
     /* margin: 4vh 0vh; */
     margin-bottom: 0vh;
     font-size: 1rem;

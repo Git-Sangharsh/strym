@@ -205,8 +205,6 @@ const Product = () => {
     }
   }, [isLooping, playingIndex]); // Added playingIndex to dependency array
 
-
-
   useEffect(() => {
     const handleRouteChange = () => {
       stopAllAudio();
@@ -226,13 +224,19 @@ const Product = () => {
           <h1>Trending</h1>
           <h1 className="product-clr">Music.</h1>
         </div>
-        <div className="sort" >
+        <div className="sort">
           {/* Sort {isSorted ? "Z-A" : "A-Z"} */}
-          <img onClick={handleSort}   className={`sort-icon ${isSorted ? 'bg-pad' : ''}`}
- src={sortIcon} alt="sort" />
+          <img
+            onClick={handleSort}
+            className={`sort-icon ${isSorted ? "bg-pad" : ""}`}
+            src={sortIcon}
+            alt="sort"
+          />
         </div>
       </div>
-
+      <div className="product-search">
+        <input className="search-input" type="text" placeholder="Search" />
+      </div>
       <div className="product-wrapper">
         {api.length > 0 ? (
           api.map((item, index) => (

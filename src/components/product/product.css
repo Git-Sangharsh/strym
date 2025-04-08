@@ -297,6 +297,23 @@ audio {
 
   }
 
+  .product-search{
+    width: 93%;
+    /* margin: 4vh 0vh; */
+    margin-bottom: 0vh;
+    font-size: 1rem;
+  }
+
+  .search-input{
+    width: 100%;
+    padding: 1rem;
+    border-radius: 10px;
+    outline: none;
+    border: none;
+    background-color: #18181A;
+    color: white;
+  }
+
 
 /* Responsive Design */
 @media screen and (max-width: 1200px) {

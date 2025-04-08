@@ -8,7 +8,7 @@ import nextIcon from "../assets/next.svg";
 import previousIcon from "../assets/previous.svg";
 import loopIcon from "../assets/loop.svg";
 import shuffleIcon from "../assets/shuffle.svg";
-
+import sortIcon from "../assets/sort.svg";
 const Product = () => {
   const [api, setApi] = useState([]);
   const [playingIndex, setPlayingIndex] = useState(null);
@@ -18,6 +18,7 @@ const Product = () => {
   const [duration, setDuration] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
   const [shuffleMode, setShuffleMode] = useState(false);
+  const [isSorted, setIsSorted] = useState(false);
 
   const audioRefs = useRef([]);
 
@@ -62,31 +63,62 @@ const Product = () => {
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
+  // Define handlers first before they're used
+  const playRandomSong = (currentIndex) => {
+    if (api.length <= 1) return; // No point shuffling if only 1 track
+
+    const availableIndexes = api
+      .map((_, i) => i) // Create array of indexes [0, 1, 2, ...]
+      .filter((i) => i !== currentIndex); // Remove the current one
+
+    const randomIndex =
+      availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
+
+    // Stop current audio before playing new one
+    if (audioRefs.current[currentIndex]) {
+      audioRefs.current[currentIndex].pause();
+    }
+
+    handlePlay(randomIndex);
+  };
+
   const handlePlay = (index) => {
     const audioSrc = api[index].audio;
 
-    if (!audioRefs.current[index]) {
-      const audio = new Audio(audioSrc);
-      audio.loop = isLooping;
-      audioRefs.current[index] = audio;
+    // Define handlers as named functions
+    const timeUpdateHandler = () => {
+      setCurrentTime(audioRefs.current[index].currentTime);
+      setDuration(audioRefs.current[index].duration || 0);
+    };
 
-      audio.addEventListener("ended", () => setIsPlaying(false));
+    const audioEndedHandler = () => {
+      if (isLooping) return; // If looping is enabled, the audio will loop automatically
 
-      audio.addEventListener("timeupdate", () => {
-        setCurrentTime(audio.currentTime);
-        setDuration(audio.duration || 0);
-      });
+      if (shuffleMode) {
+        playRandomSong(index);
+      } else {
+        // Play next song in sequence
+        const nextIndex = (index + 1) % api.length;
+        handlePlay(nextIndex);
+      }
+    };
 
-      audio.addEventListener("ended", () => {
-        if (shuffleMode) {
-          playRandomSong(index);
-        } else {
-          setIsPlaying(false);
-        }
-      });
+    // Clear any existing event listeners before creating a new audio instance
+    if (audioRefs.current[index]) {
+      const oldAudio = audioRefs.current[index];
+      oldAudio.pause();
+      oldAudio.removeEventListener("timeupdate", timeUpdateHandler);
+      oldAudio.removeEventListener("ended", audioEndedHandler);
     }
 
-    const audio = audioRefs.current[index];
+    // Create new audio instance
+    const audio = new Audio(audioSrc);
+    audio.loop = isLooping;
+    audioRefs.current[index] = audio;
+
+    // Add event listeners
+    audio.addEventListener("timeupdate", timeUpdateHandler);
+    audio.addEventListener("ended", audioEndedHandler);
 
     // Stop other audios
     audioRefs.current.forEach((aud, i) => {
@@ -101,7 +133,9 @@ const Product = () => {
       setIsPlaying(false);
     } else {
       audio.currentTime = 0;
-      audio.play();
+      audio.play().catch((error) => {
+        console.error("Error playing audio:", error);
+      });
       setPlayingIndex(index);
       setIsPlaying(true);
       setIsPlayback(true);
@@ -118,15 +152,23 @@ const Product = () => {
 
   const handleNext = () => {
     if (playingIndex !== null) {
-      const nextIndex = (playingIndex + 1) % api.length;
-      handlePlay(nextIndex);
+      if (shuffleMode) {
+        playRandomSong(playingIndex);
+      } else {
+        const nextIndex = (playingIndex + 1) % api.length;
+        handlePlay(nextIndex);
+      }
     }
   };
 
   const handlePrevious = () => {
     if (playingIndex !== null) {
-      const prevIndex = (playingIndex - 1 + api.length) % api.length;
-      handlePlay(prevIndex);
+      if (shuffleMode) {
+        playRandomSong(playingIndex);
+      } else {
+        const prevIndex = (playingIndex - 1 + api.length) % api.length;
+        handlePlay(prevIndex);
+      }
     }
   };
 
@@ -144,15 +186,26 @@ const Product = () => {
     setShuffleMode(!shuffleMode);
   };
 
-  const playRandomSong = (currentIndex) => {
-    if (api.length <= 1) return;
-
-    let randomIndex = Math.floor(Math.random() * api.length);
-    while (randomIndex === currentIndex) {
-      randomIndex = Math.floor(Math.random() * api.length);
-    }
-    handlePlay(randomIndex);
+  const handleSort = () => {
+    const sortedData = [...api].sort((a, b) => {
+      // If sorted in ascending order, sort in descending order on the next click
+      if (isSorted) {
+        return b.title.localeCompare(a.title); // Z-A sort
+      }
+      return a.title.localeCompare(b.title); // A-Z sort
+    });
+    setApi(sortedData);
+    setIsSorted(!isSorted); // Toggle the sort state
   };
+
+  useEffect(() => {
+    // Update loop status for current audio when looping state changes
+    if (playingIndex !== null && audioRefs.current[playingIndex]) {
+      audioRefs.current[playingIndex].loop = isLooping;
+    }
+  }, [isLooping, playingIndex]); // Added playingIndex to dependency array
+
+
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -168,20 +221,23 @@ const Product = () => {
 
   return (
     <div className="product-container">
-      <div className="product-container-title">
-        <h1>Trending</h1>
-        <h1 className="product-clr">Music.</h1>
+      <div className="product-sort">
+        <div className="product-container-title">
+          <h1>Trending</h1>
+          <h1 className="product-clr">Music.</h1>
+        </div>
+        <div className="sort" >
+          {/* Sort {isSorted ? "Z-A" : "A-Z"} */}
+          <img onClick={handleSort}   className={`sort-icon ${isSorted ? 'bg-pad' : ''}`}
+ src={sortIcon} alt="sort" />
+        </div>
       </div>
 
       <div className="product-wrapper">
         {api.length > 0 ? (
           api.map((item, index) => (
-            // console.log("Image path:", item.image),
-
             <div key={item._id} className="product-box">
-              <div
-                className="product-image-container"
-              >
+              <div className="product-image-container">
                 <img
                   src={item.image}
                   alt={item.title}
@@ -190,16 +246,20 @@ const Product = () => {
 
                 <img
                   src={
-                    isPlaying && playingIndex === index
-                      ? pauseIcon
-                      : playIcon
+                    isPlaying && playingIndex === index ? pauseIcon : playIcon
                   }
                   alt="Play/Pause"
-                  className={`play-button ${(playingIndex === index && isPlaying) ? 'play-button-visible' : ''}`}
+                  className={`play-button ${
+                    playingIndex === index && isPlaying
+                      ? "play-button-visible"
+                      : ""
+                  }`}
                   onClick={() => handlePlay(index)}
                 />
                 <div
-                  className={`product-image-overlay ${(playingIndex === index && isPlaying) ? 'active' : ''}`}
+                  className={`product-image-overlay ${
+                    playingIndex === index && isPlaying ? "active" : ""
+                  }`}
                   onClick={() => handlePlay(index)}
                 ></div>
               </div>
@@ -210,24 +270,60 @@ const Product = () => {
         ) : (
           <>
             <div className="product-box">
-              <div className="product-image-container skeleton" style={{height: "300px"}}></div>
-              <div className="product-title skeleton" style={{height: "20px", marginTop: "10px", width: "80%"}}></div>
-              <div className="product-by skeleton" style={{height: "15px", marginTop: "10px", width: "60%"}}></div>
+              <div
+                className="product-image-container skeleton"
+                style={{ height: "300px" }}
+              ></div>
+              <div
+                className="product-title skeleton"
+                style={{ height: "20px", marginTop: "10px", width: "80%" }}
+              ></div>
+              <div
+                className="product-by skeleton"
+                style={{ height: "15px", marginTop: "10px", width: "60%" }}
+              ></div>
             </div>
             <div className="product-box">
-              <div className="product-image-container skeleton" style={{height: "300px"}}></div>
-              <div className="product-title skeleton" style={{height: "20px", marginTop: "10px", width: "80%"}}></div>
-              <div className="product-by skeleton" style={{height: "15px", marginTop: "10px", width: "60%"}}></div>
+              <div
+                className="product-image-container skeleton"
+                style={{ height: "300px" }}
+              ></div>
+              <div
+                className="product-title skeleton"
+                style={{ height: "20px", marginTop: "10px", width: "80%" }}
+              ></div>
+              <div
+                className="product-by skeleton"
+                style={{ height: "15px", marginTop: "10px", width: "60%" }}
+              ></div>
             </div>
             <div className="product-box">
-              <div className="product-image-container skeleton" style={{height: "300px"}}></div>
-              <div className="product-title skeleton" style={{height: "20px", marginTop: "10px", width: "80%"}}></div>
-              <div className="product-by skeleton" style={{height: "15px", marginTop: "10px", width: "60%"}}></div>
+              <div
+                className="product-image-container skeleton"
+                style={{ height: "300px" }}
+              ></div>
+              <div
+                className="product-title skeleton"
+                style={{ height: "20px", marginTop: "10px", width: "80%" }}
+              ></div>
+              <div
+                className="product-by skeleton"
+                style={{ height: "15px", marginTop: "10px", width: "60%" }}
+              ></div>
             </div>
             <div className="product-box">
-              <div className="product-image-container skeleton" style={{height: "300px"}}></div>
-              <div className="product-title skeleton" style={{height: "20px", marginTop: "10px", width: "80%"}}></div>
-              <div className="product-by skeleton" style={{height: "15px", marginTop: "10px", width: "60%"}}></div>
+              <div
+                className="product-image-container skeleton"
+                style={{ height: "300px" }}
+              ></div>
+              <div
+                className="product-title skeleton"
+                style={{ height: "20px", marginTop: "10px", width: "80%" }}
+              ></div>
+              <div
+                className="product-by skeleton"
+                style={{ height: "15px", marginTop: "10px", width: "60%" }}
+              ></div>
             </div>
           </>
         )}

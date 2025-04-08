@@ -282,15 +282,14 @@ audio {
   }
 
   .sort-icon{
-    width: 20px !important;
-    height: 20px !important;
+    /* width: 20px !important;
+    height: 20px !important; */
+    height: 1.5rem;
     transition: all 0.3s ease-in-out;
     /* transition: all 0.3s ease-in-out; */
   }
 
   .bg-pad {
-    width: 20px !important;
-    height: 20px !important;
     background-color: black;
     filter: brightness(1.9);
     transform: scale(1.1);

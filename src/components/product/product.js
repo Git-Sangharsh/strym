@@ -29,6 +29,8 @@ const Product = () => {
   });
   const [showFavorites, setShowFavorites] = useState(false);
   const [displayData, setDisplayData] = useState([]);
+  const [playingTrackTitle, setPlayingTrackTitle] = useState(null);
+
   const audioRefs = useRef([]);
   const pausedTimeRef = useRef({}); // Store paused time for each track
 
@@ -53,6 +55,10 @@ const Product = () => {
       stopAllAudio();
     };
   }, []);
+
+  // console.log(api
+
+  // )
 
   // Filter data based on search term and favorites toggle
   useEffect(() => {
@@ -79,13 +85,22 @@ const Product = () => {
     // Reset playingIndex if the current track is no longer in the filtered list
     if (playingIndex !== null) {
       const currentTrackId = api[playingIndex]?._id;
-      const trackStillExists = filteredData.some(track => track._id === currentTrackId);
+      const trackStillExists = filteredData.some(
+        (track) => track._id === currentTrackId
+      );
 
       if (!trackStillExists) {
         stopAllAudio();
       }
     }
-  }, [searchTerm, showFavorites, originalData, storeFavorites]);
+  }, [
+    searchTerm,
+    showFavorites,
+    originalData,
+    storeFavorites,
+    api,
+    playingIndex,
+  ]);
 
   // Function to stop all audio
   const stopAllAudio = () => {
@@ -126,17 +141,22 @@ const Product = () => {
 
     if (audioRefs.current[currentIndex]) {
       // Store the current time before stopping
-      pausedTimeRef.current[currentIndex] = audioRefs.current[currentIndex].currentTime;
+      pausedTimeRef.current[currentIndex] =
+        audioRefs.current[currentIndex].currentTime;
       audioRefs.current[currentIndex].pause();
     }
 
     handlePlay(randomIndex);
   };
 
-  const handlePlay = (index) => {
+  const handlePlay = (index, title) => {
     const audioSrc = displayData[index].audio;
-    const trackId = displayData[index]._id;
+    const trackId = displayData[index].title;
+    console.log("index", index);
+    console.log("title", title);
+    setPlayingTrackTitle(title);
 
+    // console.log("trackId", trackId)
     // Define handlers as named functions
     const timeUpdateHandler = () => {
       setCurrentTime(audioRefs.current[index].currentTime);
@@ -242,7 +262,8 @@ const Product = () => {
       if (shuffleMode) {
         playRandomSong(playingIndex);
       } else {
-        const prevIndex = (playingIndex - 1 + displayData.length) % displayData.length;
+        const prevIndex =
+          (playingIndex - 1 + displayData.length) % displayData.length;
         handlePlay(prevIndex);
       }
     }
@@ -310,7 +331,7 @@ const Product = () => {
         // Resume current audio
         const audio = audioRefs.current[playingIndex];
         if (audio) {
-          audio.play().catch(error => {
+          audio.play().catch((error) => {
             console.error("Error playing audio:", error);
           });
           setIsPlaying(true);
@@ -320,7 +341,9 @@ const Product = () => {
   };
 
   const currentTrack = playingIndex !== null ? displayData[playingIndex] : null;
-  const isFavorite = currentTrack ? storeFavorites.includes(currentTrack.title) : false;
+  const isFavorite = currentTrack
+    ? storeFavorites.includes(currentTrack.title)
+    : false;
 
   const handleFavorite = () => {
     if (!currentTrack) return;
@@ -342,6 +365,9 @@ const Product = () => {
     setShowFavorites(!showFavorites);
   };
 
+  // console.log(currentTrack?.title)
+  console.log("displayData", displayData);
+  console.log("playingIndex", playingIndex);
   return (
     <div className="product-container">
       <div className="product-sort">
@@ -374,7 +400,9 @@ const Product = () => {
       </div>
       <div
         className={`product-wrapper ${
-          searchTerm.trim() !== "" || showFavorites ? "product-wrapper-search" : ""
+          searchTerm.trim() !== "" || showFavorites
+            ? "product-wrapper-search"
+            : ""
         }`}
       >
         {displayData.length > 0 ? (
@@ -389,21 +417,26 @@ const Product = () => {
 
                 <img
                   src={
-                    isPlaying && playingIndex === index ? pauseIcon : playIcon
+                    isPlaying && playingTrackTitle === item.title
+                      ? pauseIcon
+                      : playIcon
                   }
                   alt="Play/Pause"
                   className={`play-button ${
-                    playingIndex === index && isPlaying
+                    isPlaying && playingTrackTitle === item.title
                       ? "play-button-visible"
                       : ""
                   }`}
-                  onClick={() => handlePlay(index)}
+                  onClick={() => handlePlay(index, item.title)}
                 />
+
                 <div
                   className={`product-image-overlay ${
-                    playingIndex === index && isPlaying ? "active" : ""
+                    isPlaying && playingTrackTitle === item.title
+                      ? "active"
+                      : ""
                   }`}
-                  onClick={() => handlePlay(index)}
+                  onClick={() => handlePlay(index, item.title)}
                 ></div>
               </div>
               <h3 className="product-title">{item.title}</h3>
@@ -531,7 +564,8 @@ const Product = () => {
           </div>
           {playingIndex !== null && displayData[playingIndex] && (
             <h6 className="playing-track-name">
-              {displayData[playingIndex].title} - {displayData[playingIndex].singer}
+              {displayData[playingIndex].title} -{" "}
+              {displayData[playingIndex].singer}
             </h6>
           )}
           <div className="progress-bar-container">

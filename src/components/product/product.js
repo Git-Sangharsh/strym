@@ -9,6 +9,9 @@ import previousIcon from "../assets/previous.svg";
 import loopIcon from "../assets/loop.svg";
 import shuffleIcon from "../assets/shuffle.svg";
 import sortIcon from "../assets/sort.svg";
+import favoriteIcon from "../assets/favorite.svg";
+import fillIcon from "../assets/fill.svg";
+
 const Product = () => {
   const [api, setApi] = useState([]);
   const [originalData, setOriginalData] = useState([]); // Store original data for filtering
@@ -21,8 +24,13 @@ const Product = () => {
   const [shuffleMode, setShuffleMode] = useState(false);
   const [isSorted, setIsSorted] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // New state for search term
-
+  const [storeFavorites, setStoreFavorites] = useState(() => {
+    return JSON.parse(localStorage.getItem("favorites")) || [];
+  });
+  const [showFavorites, setShowFavorites] = useState(false);
+  const [displayData, setDisplayData] = useState([]);
   const audioRefs = useRef([]);
+  const pausedTimeRef = useRef({}); // Store paused time for each track
 
   useEffect(() => {
     const fetchTracks = async () => {
@@ -30,9 +38,9 @@ const Product = () => {
         const response = await axios.get(
           `${process.env.REACT_APP_BACKEND_API}/tracks`
         );
-        console.log("Fetched:", response.data);
         setApi(response.data);
         setOriginalData(response.data); // Save original data
+        setDisplayData(response.data);
       } catch (err) {
         console.error("Error fetching tracks", err);
       }
@@ -46,28 +54,46 @@ const Product = () => {
     };
   }, []);
 
-  // Filter data when search term changes
+  // Filter data based on search term and favorites toggle
   useEffect(() => {
-    if (searchTerm.trim() === "") {
-      // If search term is empty, show all tracks
-      setApi(originalData);
-    } else {
-      // Filter tracks based on title or singer name
-      const filteredData = originalData.filter(
+    let filteredData = originalData;
+
+    // First filter by search term if present
+    if (searchTerm.trim() !== "") {
+      filteredData = filteredData.filter(
         (track) =>
           track.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           track.singer.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setApi(filteredData);
     }
-  }, [searchTerm, originalData]);
+
+    // Then filter by favorites if showFavorites is true
+    if (showFavorites) {
+      filteredData = filteredData.filter((track) =>
+        storeFavorites.includes(track.title)
+      );
+    }
+
+    setDisplayData(filteredData);
+
+    // Reset playingIndex if the current track is no longer in the filtered list
+    if (playingIndex !== null) {
+      const currentTrackId = api[playingIndex]?._id;
+      const trackStillExists = filteredData.some(track => track._id === currentTrackId);
+
+      if (!trackStillExists) {
+        stopAllAudio();
+      }
+    }
+  }, [searchTerm, showFavorites, originalData, storeFavorites]);
 
   // Function to stop all audio
   const stopAllAudio = () => {
-    audioRefs.current.forEach((audio) => {
+    audioRefs.current.forEach((audio, index) => {
       if (audio) {
+        // Store the current time before stopping
+        pausedTimeRef.current[index] = audio.currentTime;
         audio.pause();
-        audio.currentTime = 0;
       }
     });
     setIsPlaying(false);
@@ -87,19 +113,20 @@ const Product = () => {
     setSearchTerm(e.target.value);
   };
 
-  // Define handlers first before they're used
+  // Play random song from currently displayed tracks
   const playRandomSong = (currentIndex) => {
-    if (api.length <= 1) return; // No point shuffling if only 1 track
+    if (displayData.length <= 1) return;
 
-    const availableIndexes = api
-      .map((_, i) => i) // Create array of indexes [0, 1, 2, ...]
-      .filter((i) => i !== currentIndex); // Remove the current one
+    const availableIndexes = displayData
+      .map((_, i) => i)
+      .filter((i) => i !== currentIndex);
 
     const randomIndex =
       availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
 
-    // Stop current audio before playing new one
     if (audioRefs.current[currentIndex]) {
+      // Store the current time before stopping
+      pausedTimeRef.current[currentIndex] = audioRefs.current[currentIndex].currentTime;
       audioRefs.current[currentIndex].pause();
     }
 
@@ -107,7 +134,8 @@ const Product = () => {
   };
 
   const handlePlay = (index) => {
-    const audioSrc = api[index].audio;
+    const audioSrc = displayData[index].audio;
+    const trackId = displayData[index]._id;
 
     // Define handlers as named functions
     const timeUpdateHandler = () => {
@@ -122,18 +150,42 @@ const Product = () => {
         playRandomSong(index);
       } else {
         // Play next song in sequence
-        const nextIndex = (index + 1) % api.length;
+        const nextIndex = (index + 1) % displayData.length;
         handlePlay(nextIndex);
       }
     };
 
+    // Check if we're toggling play/pause for the currently playing track
+    const isTogglingCurrentTrack = playingIndex === index && isPlaying;
+
     // Clear any existing event listeners before creating a new audio instance
     if (audioRefs.current[index]) {
       const oldAudio = audioRefs.current[index];
+
+      if (isTogglingCurrentTrack) {
+        // We're pausing the current track - save its time
+        pausedTimeRef.current[trackId] = oldAudio.currentTime;
+        oldAudio.pause();
+        setIsPlaying(false);
+        return; // Exit early - we're just pausing, not creating a new audio instance
+      }
+
       oldAudio.pause();
       oldAudio.removeEventListener("timeupdate", timeUpdateHandler);
       oldAudio.removeEventListener("ended", audioEndedHandler);
     }
+
+    // Stop other audios
+    audioRefs.current.forEach((audio, i) => {
+      if (i !== index && audio) {
+        // Store the current time before stopping
+        const otherTrackId = displayData[i]?._id;
+        if (otherTrackId) {
+          pausedTimeRef.current[otherTrackId] = audio.currentTime;
+        }
+        audio.pause();
+      }
+    });
 
     // Create new audio instance
     const audio = new Audio(audioSrc);
@@ -144,32 +196,32 @@ const Product = () => {
     audio.addEventListener("timeupdate", timeUpdateHandler);
     audio.addEventListener("ended", audioEndedHandler);
 
-    // Stop other audios
-    audioRefs.current.forEach((aud, i) => {
-      if (i !== index && aud) {
-        aud.pause();
-        aud.currentTime = 0;
-      }
+    // Restore previous position if available
+    if (pausedTimeRef.current[trackId] && pausedTimeRef.current[trackId] > 0) {
+      audio.currentTime = pausedTimeRef.current[trackId];
+    }
+
+    // Play the audio
+    audio.play().catch((error) => {
+      console.error("Error playing audio:", error);
     });
 
-    if (playingIndex === index && isPlaying) {
-      audio.pause();
-      setIsPlaying(false);
-    } else {
-      audio.currentTime = 0;
-      audio.play().catch((error) => {
-        console.error("Error playing audio:", error);
-      });
-      setPlayingIndex(index);
-      setIsPlaying(true);
-      setIsPlayback(true);
-    }
+    setPlayingIndex(index);
+    setIsPlaying(true);
+    setIsPlayback(true);
   };
 
   const handleSeek = (e) => {
     const newTime = e.target.value;
     if (playingIndex !== null && audioRefs.current[playingIndex]) {
       audioRefs.current[playingIndex].currentTime = newTime;
+
+      // Also update the stored paused time
+      const trackId = displayData[playingIndex]?._id;
+      if (trackId) {
+        pausedTimeRef.current[trackId] = newTime;
+      }
+
       setCurrentTime(newTime);
     }
   };
@@ -179,7 +231,7 @@ const Product = () => {
       if (shuffleMode) {
         playRandomSong(playingIndex);
       } else {
-        const nextIndex = (playingIndex + 1) % api.length;
+        const nextIndex = (playingIndex + 1) % displayData.length;
         handlePlay(nextIndex);
       }
     }
@@ -190,7 +242,7 @@ const Product = () => {
       if (shuffleMode) {
         playRandomSong(playingIndex);
       } else {
-        const prevIndex = (playingIndex - 1 + api.length) % api.length;
+        const prevIndex = (playingIndex - 1 + displayData.length) % displayData.length;
         handlePlay(prevIndex);
       }
     }
@@ -211,14 +263,13 @@ const Product = () => {
   };
 
   const handleSort = () => {
-    const sortedData = [...api].sort((a, b) => {
-      // If sorted in ascending order, sort in descending order on the next click
+    const sortedData = [...displayData].sort((a, b) => {
       if (isSorted) {
         return b.title.localeCompare(a.title); // Z-A sort
       }
       return a.title.localeCompare(b.title); // A-Z sort
     });
-    setApi(sortedData);
+    setDisplayData(sortedData);
     setIsSorted(!isSorted); // Toggle the sort state
   };
 
@@ -241,11 +292,61 @@ const Product = () => {
     };
   }, []);
 
+  // Handle play/pause toggle for the playback bar
+  const handlePlaybackToggle = () => {
+    if (playingIndex !== null) {
+      if (isPlaying) {
+        // Pause current audio
+        const audio = audioRefs.current[playingIndex];
+        if (audio) {
+          const trackId = displayData[playingIndex]?._id;
+          if (trackId) {
+            pausedTimeRef.current[trackId] = audio.currentTime;
+          }
+          audio.pause();
+          setIsPlaying(false);
+        }
+      } else {
+        // Resume current audio
+        const audio = audioRefs.current[playingIndex];
+        if (audio) {
+          audio.play().catch(error => {
+            console.error("Error playing audio:", error);
+          });
+          setIsPlaying(true);
+        }
+      }
+    }
+  };
+
+  const currentTrack = playingIndex !== null ? displayData[playingIndex] : null;
+  const isFavorite = currentTrack ? storeFavorites.includes(currentTrack.title) : false;
+
+  const handleFavorite = () => {
+    if (!currentTrack) return;
+
+    const title = currentTrack.title;
+    let updatedFavorites;
+
+    if (storeFavorites.includes(title)) {
+      updatedFavorites = storeFavorites.filter((fav) => fav !== title); // remove
+    } else {
+      updatedFavorites = [...storeFavorites, title]; // add
+    }
+
+    setStoreFavorites(updatedFavorites);
+    localStorage.setItem("favorites", JSON.stringify(updatedFavorites));
+  };
+
+  const handleShowFavorites = () => {
+    setShowFavorites(!showFavorites);
+  };
+
   return (
     <div className="product-container">
       <div className="product-sort">
         <div className="product-container-title">
-          <h1>Trending</h1>
+          <h1>{showFavorites ? "Liked" : "Trending"}</h1>
           <h1 className="product-clr">Music.</h1>
         </div>
         <div className="sort">
@@ -266,10 +367,18 @@ const Product = () => {
           onChange={handleSearchChange}
         />
       </div>
-      <div   className={`product-wrapper ${searchTerm.trim() !== "" ? "product-wrapper-search" : ""}`}
+      <div className="like-section" onClick={handleShowFavorites}>
+        <h1 className="like-section-title">
+          {showFavorites ? "Show All Songs" : "Liked Songs"}
+        </h1>
+      </div>
+      <div
+        className={`product-wrapper ${
+          searchTerm.trim() !== "" || showFavorites ? "product-wrapper-search" : ""
+        }`}
       >
-        {api.length > 0 ? (
-          api.map((item, index) => (
+        {displayData.length > 0 ? (
+          displayData.map((item, index) => (
             <div key={item._id} className="product-box">
               <div className="product-image-container">
                 <img
@@ -301,8 +410,12 @@ const Product = () => {
               <h6 className="product-by">By {item.singer}</h6>
             </div>
           ))
-        ) : searchTerm ? (
-          <div className="no-results">No results found for "{searchTerm}"</div>
+        ) : searchTerm || showFavorites ? (
+          <div className="no-results">
+            {showFavorites
+              ? "No liked songs found"
+              : `No results found for "${searchTerm}"`}
+          </div>
         ) : (
           <>
             <div className="product-box">
@@ -391,7 +504,7 @@ const Product = () => {
               src={isPlaying ? pauseIcon : playIcon}
               alt="Play/Pause"
               className="playback-play-icon"
-              onClick={() => playingIndex !== null && handlePlay(playingIndex)}
+              onClick={handlePlaybackToggle}
             />
             <img
               className="playback-play-icon next-previous-icon"
@@ -407,10 +520,18 @@ const Product = () => {
               alt=""
               onClick={handleLoopToggle}
             />
+            {currentTrack && (
+              <img
+                src={isFavorite ? fillIcon : favoriteIcon}
+                className="favorite-icon"
+                alt="Favorite"
+                onClick={handleFavorite}
+              />
+            )}
           </div>
-          {playingIndex !== null && api[playingIndex] && (
+          {playingIndex !== null && displayData[playingIndex] && (
             <h6 className="playing-track-name">
-              {api[playingIndex].title} - {api[playingIndex].singer}
+              {displayData[playingIndex].title} - {displayData[playingIndex].singer}
             </h6>
           )}
           <div className="progress-bar-container">

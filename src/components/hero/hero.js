@@ -20,7 +20,7 @@ const Hero = () => {
         const randomFour = shuffled.slice(0, 4);
 
         setTrackThumbnail(randomFour);
-        console.log("Random Thumbnail:", randomFour);
+        // console.log("Random Thumbnail:", randomFour);
       } catch (error) {
         console.error("Error fetching thumbnails:", error);
       }

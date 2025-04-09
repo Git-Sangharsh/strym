@@ -273,7 +273,7 @@ audio {
     justify-content: space-between;
     gap: 10px;
     width: 93%; /* Match product-wrapper width */
-    margin: 4vh 0vh;
+    margin: 1rem 0vh;
     margin-bottom: 0vh;
     font-size: 1rem;
   }
@@ -320,6 +320,31 @@ audio {
     color: white;
   }
 
+  .favorite-icon{
+    /* background-color: red; */
+    width: 1.5rem;
+    position: absolute;
+    left: 5%;
+    cursor: pointer;
+  }
+
+  .like-section{
+    width: 93.8%;
+    /* margin: 4vh 0vh; */
+    margin-bottom: 0vh;
+    border-radius: 10px;
+    outline: none;
+    border: none;
+    background-color: #18181A;
+  }
+
+  .like-section-title{
+    text-align: start;
+    padding: 1rem;
+    font-size: 1rem;
+    color: #11CD91;
+    cursor: pointer;
+  }
 
 /* Responsive Design */
 @media screen and (max-width: 1200px) {

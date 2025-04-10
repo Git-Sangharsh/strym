@@ -417,13 +417,19 @@ const Product = () => {
 
                 <img
                   src={
-                    isPlaying && playingTrackTitle === item.title
+                    isPlaying &&
+                    (showFavorites
+                      ? playingTrackTitle === item.title
+                      : playingIndex === index)
                       ? pauseIcon
                       : playIcon
                   }
                   alt="Play/Pause"
                   className={`play-button ${
-                    isPlaying && playingTrackTitle === item.title
+                    isPlaying &&
+                    (showFavorites
+                      ? playingTrackTitle === item.title
+                      : playingIndex === index)
                       ? "play-button-visible"
                       : ""
                   }`}
@@ -432,7 +438,10 @@ const Product = () => {
 
                 <div
                   className={`product-image-overlay ${
-                    isPlaying && playingTrackTitle === item.title
+                    isPlaying &&
+                    (showFavorites
+                      ? playingTrackTitle === item.title
+                      : playingIndex === index)
                       ? "active"
                       : ""
                   }`}

@@ -152,8 +152,6 @@ const Product = () => {
     setPlayingTrackTitle(title);
     setPlayingTrackSinger(singer);
 
-
-
     // console.log("trackId", trackId)
     // Define handlers as named functions
     const timeUpdateHandler = () => {
@@ -169,7 +167,7 @@ const Product = () => {
       } else {
         // Play next song in sequence
         const nextIndex = (index + 1) % displayData.length;
-        handlePlay(nextIndex);
+        handlePlay(nextIndex, displayData[nextIndex].title, displayData[nextIndex].singer);
       }
     };
 
@@ -260,9 +258,12 @@ const Product = () => {
       if (shuffleMode) {
         playRandomSong(playingIndex);
       } else {
-        const prevIndex =
-          (playingIndex - 1 + displayData.length) % displayData.length;
-        handlePlay(prevIndex);
+        const prevIndex = (playingIndex - 1 + displayData.length) % displayData.length;
+        const prevTrack = displayData[prevIndex];
+
+        if (prevTrack) {
+          handlePlay(prevIndex, prevTrack.title, prevTrack.singer);
+        }
       }
     }
   };
@@ -416,37 +417,35 @@ const Product = () => {
                   className="product-image"
                 />
 
-<img
-  src={
-    isPlaying &&
-    playingTrackTitle === item.title &&
-    playingTrackSinger === item.singer
-      ? pauseIcon
-      : playIcon
-  }
-  alt="Play/Pause"
-  className={`play-button ${
-    isPlaying &&
-    playingTrackTitle === item.title &&
-    playingTrackSinger === item.singer
-      ? "play-button-visible"
-      : ""
-  }`}
-  onClick={() => handlePlay(index, item.title, item.singer)}
-/>
+                <img
+                  src={
+                    isPlaying &&
+                    playingTrackTitle === item.title &&
+                    playingTrackSinger === item.singer
+                      ? pauseIcon
+                      : playIcon
+                  }
+                  alt="Play/Pause"
+                  className={`play-button ${
+                    isPlaying &&
+                    playingTrackTitle === item.title &&
+                    playingTrackSinger === item.singer
+                      ? "play-button-visible"
+                      : ""
+                  }`}
+                  onClick={() => handlePlay(index, item.title, item.singer)}
+                />
 
-
-<div
-  className={`product-image-overlay ${
-    isPlaying &&
-    playingTrackTitle === item.title &&
-    playingTrackSinger === item.singer
-      ? "active"
-      : ""
-  }`}
-  onClick={() => handlePlay(index, item.title, item.singer)}
-></div>
-
+                <div
+                  className={`product-image-overlay ${
+                    isPlaying &&
+                    playingTrackTitle === item.title &&
+                    playingTrackSinger === item.singer
+                      ? "active"
+                      : ""
+                  }`}
+                  onClick={() => handlePlay(index, item.title, item.singer)}
+                ></div>
               </div>
               <h3 className="product-title">{item.title}</h3>
               <h6 className="product-by">By {item.singer}</h6>
@@ -578,6 +577,7 @@ const Product = () => {
               </AnimatePresence>
             )}
           </div>
+          {/* Track  Title and Singer   */}
           {playingIndex !== null && displayData[playingIndex] && (
             <h6 className="playing-track-name">
               {playingTrackTitle} - {playingTrackSinger}

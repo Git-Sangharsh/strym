@@ -30,6 +30,7 @@ const Product = () => {
   const [showFavorites, setShowFavorites] = useState(false);
   const [displayData, setDisplayData] = useState([]);
   const [playingTrackTitle, setPlayingTrackTitle] = useState(null);
+  const [playingTrackSinger, setPlayingTrackSinger] = useState(null);
 
   const audioRefs = useRef([]);
   const pausedTimeRef = useRef({}); // Store paused time for each track
@@ -143,12 +144,15 @@ const Product = () => {
     handlePlay(randomIndex);
   };
 
-  const handlePlay = (index, title) => {
+  const handlePlay = (index, title, singer) => {
     const audioSrc = displayData[index].audio;
     const trackId = displayData[index].title;
-    console.log("index", index);
-    console.log("title", title);
+    // console.log("index", index);
+    // console.log("title", title);
     setPlayingTrackTitle(title);
+    setPlayingTrackSinger(singer);
+
+
 
     // console.log("trackId", trackId)
     // Define handlers as named functions
@@ -242,11 +246,11 @@ const Product = () => {
 
   const handleNext = () => {
     if (playingIndex !== null) {
-      if (shuffleMode) {
-        playRandomSong(playingIndex);
-      } else {
-        const nextIndex = (playingIndex + 1) % displayData.length;
-        handlePlay(nextIndex);
+      const nextIndex = (playingIndex + 1) % displayData.length;
+      const nextTrack = displayData[nextIndex];
+
+      if (nextTrack) {
+        handlePlay(nextIndex, nextTrack.title, nextTrack.singer);
       }
     }
   };
@@ -360,9 +364,11 @@ const Product = () => {
     setShowFavorites(!showFavorites);
   };
 
-  console.log(currentTrack?.title);
+  // console.log(currentTrack?.title);
   // console.log("displayData", displayData);
   // console.log("playingIndex", playingIndex);
+  // console.log("currentTrack", playingTrackTitle);
+  // console.log("showFavorites", showFavorites);
   return (
     <div className="product-container">
       <div className="product-sort">
@@ -410,44 +416,37 @@ const Product = () => {
                   className="product-image"
                 />
 
-                <img
-                  src={
-                    isPlaying &&
-                    (showFavorites
-                      ? playingTrackTitle === item.title
-                      : isSorted
-                      ? playingTrackTitle === item.title
-                      : playingIndex === index)
-                      ? pauseIcon
-                      : playIcon
-                  }
-                  alt="Play/Pause"
-                  className={`play-button ${
-                    isPlaying &&
-                    (showFavorites
-                      ? playingTrackTitle === item.title
-                      : isSorted
-                      ? playingTrackTitle === item.title
-                      : playingIndex === index)
-                      ? "play-button-visible"
-                      : ""
-                  }`}
-                  onClick={() => handlePlay(index, item.title)}
-                />
+<img
+  src={
+    isPlaying &&
+    playingTrackTitle === item.title &&
+    playingTrackSinger === item.singer
+      ? pauseIcon
+      : playIcon
+  }
+  alt="Play/Pause"
+  className={`play-button ${
+    isPlaying &&
+    playingTrackTitle === item.title &&
+    playingTrackSinger === item.singer
+      ? "play-button-visible"
+      : ""
+  }`}
+  onClick={() => handlePlay(index, item.title, item.singer)}
+/>
 
-                <div
-                  className={`product-image-overlay ${
-                    isPlaying &&
-                    (showFavorites
-                      ? playingTrackTitle === item.title
-                      : isSorted
-                      ? playingTrackTitle === item.title
-                      : playingIndex === index)
-                      ? "active"
-                      : ""
-                  }`}
-                  onClick={() => handlePlay(index, item.title)}
-                ></div>
+
+<div
+  className={`product-image-overlay ${
+    isPlaying &&
+    playingTrackTitle === item.title &&
+    playingTrackSinger === item.singer
+      ? "active"
+      : ""
+  }`}
+  onClick={() => handlePlay(index, item.title, item.singer)}
+></div>
+
               </div>
               <h3 className="product-title">{item.title}</h3>
               <h6 className="product-by">By {item.singer}</h6>
@@ -579,23 +578,11 @@ const Product = () => {
               </AnimatePresence>
             )}
           </div>
-          {isPlaying && (
+          {playingIndex !== null && displayData[playingIndex] && (
             <h6 className="playing-track-name">
-              {(() => {
-                let track;
-                if (showFavorites || isSorted) {
-                  track = displayData.find(
-                    (item) => item.title === playingTrackTitle
-                  );
-                } else if (playingIndex !== null && displayData[playingIndex]) {
-                  track = displayData[playingIndex];
-                }
-
-                return track ? `${track.title} - ${track.singer}` : "";
-              })()}
+              {playingTrackTitle} - {playingTrackSinger}
             </h6>
           )}
-
           <div className="progress-bar-container">
             <h6 className="progress-bar-time">{formatTime(currentTime)}</h6>
             <input

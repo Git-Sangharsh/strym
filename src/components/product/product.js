@@ -64,7 +64,6 @@ const Product = () => {
   useEffect(() => {
     let filteredData = originalData;
 
-    // First filter by search term if present
     if (searchTerm.trim() !== "") {
       filteredData = filteredData.filter(
         (track) =>
@@ -73,26 +72,20 @@ const Product = () => {
       );
     }
 
-    // Then filter by favorites if showFavorites is true
     if (showFavorites) {
       filteredData = filteredData.filter((track) =>
         storeFavorites.includes(track.title)
       );
     }
 
-    setDisplayData(filteredData);
-
-    // Reset playingIndex if the current track is no longer in the filtered list
-    if (playingIndex !== null) {
-      const currentTrackId = api[playingIndex]?._id;
-      const trackStillExists = filteredData.some(
-        (track) => track._id === currentTrackId
+    // Re-apply sorting if it's enabled
+    if (isSorted) {
+      filteredData = [...filteredData].sort((a, b) =>
+        a.title.localeCompare(b.title)
       );
-
-      if (!trackStillExists) {
-        stopAllAudio();
-      }
     }
+
+    setDisplayData(filteredData);
   }, [
     searchTerm,
     showFavorites,
@@ -100,7 +93,9 @@ const Product = () => {
     storeFavorites,
     api,
     playingIndex,
+    isSorted, // <-- Add this dependency
   ]);
+
 
   // Function to stop all audio
   const stopAllAudio = () => {

@@ -96,7 +96,6 @@ const Product = () => {
     isSorted, // <-- Add this dependency
   ]);
 
-
   // Function to stop all audio
   const stopAllAudio = () => {
     audioRefs.current.forEach((audio, index) => {
@@ -336,6 +335,7 @@ const Product = () => {
   };
 
   const currentTrack = playingIndex !== null ? displayData[playingIndex] : null;
+
   const isFavorite = currentTrack
     ? storeFavorites.includes(currentTrack.title)
     : false;
@@ -360,7 +360,7 @@ const Product = () => {
     setShowFavorites(!showFavorites);
   };
 
-  // console.log(currentTrack?.title)
+  console.log(currentTrack?.title);
   // console.log("displayData", displayData);
   // console.log("playingIndex", playingIndex);
   return (
@@ -410,52 +410,44 @@ const Product = () => {
                   className="product-image"
                 />
 
-<img
-  src={
-    isPlaying &&
-    (
-      showFavorites
-        ? playingTrackTitle === item.title
-        : isSorted
-          ? playingTrackTitle === item.title
-          : playingIndex === index
-    )
-      ? pauseIcon
-      : playIcon
-  }
-  alt="Play/Pause"
-  className={`play-button ${
-    isPlaying &&
-    (
-      showFavorites
-        ? playingTrackTitle === item.title
-        : isSorted
-          ? playingTrackTitle === item.title
-          : playingIndex === index
-    )
-      ? "play-button-visible"
-      : ""
-  }`}
-  onClick={() => handlePlay(index, item.title)}
-/>
+                <img
+                  src={
+                    isPlaying &&
+                    (showFavorites
+                      ? playingTrackTitle === item.title
+                      : isSorted
+                      ? playingTrackTitle === item.title
+                      : playingIndex === index)
+                      ? pauseIcon
+                      : playIcon
+                  }
+                  alt="Play/Pause"
+                  className={`play-button ${
+                    isPlaying &&
+                    (showFavorites
+                      ? playingTrackTitle === item.title
+                      : isSorted
+                      ? playingTrackTitle === item.title
+                      : playingIndex === index)
+                      ? "play-button-visible"
+                      : ""
+                  }`}
+                  onClick={() => handlePlay(index, item.title)}
+                />
 
-
-<div
-  className={`product-image-overlay ${
-    isPlaying &&
-    (
-      showFavorites
-        ? playingTrackTitle === item.title
-        : isSorted
-          ? playingTrackTitle === item.title
-          : playingIndex === index
-    )
-      ? "active"
-      : ""
-  }`}
-  onClick={() => handlePlay(index, item.title)}
-></div>
-
+                <div
+                  className={`product-image-overlay ${
+                    isPlaying &&
+                    (showFavorites
+                      ? playingTrackTitle === item.title
+                      : isSorted
+                      ? playingTrackTitle === item.title
+                      : playingIndex === index)
+                      ? "active"
+                      : ""
+                  }`}
+                  onClick={() => handlePlay(index, item.title)}
+                ></div>
               </div>
               <h3 className="product-title">{item.title}</h3>
               <h6 className="product-by">By {item.singer}</h6>
@@ -587,12 +579,23 @@ const Product = () => {
               </AnimatePresence>
             )}
           </div>
-          {playingIndex !== null && displayData[playingIndex] && (
+          {isPlaying && (
             <h6 className="playing-track-name">
-              {displayData[playingIndex].title} -{" "}
-              {displayData[playingIndex].singer}
+              {(() => {
+                let track;
+                if (showFavorites || isSorted) {
+                  track = displayData.find(
+                    (item) => item.title === playingTrackTitle
+                  );
+                } else if (playingIndex !== null && displayData[playingIndex]) {
+                  track = displayData[playingIndex];
+                }
+
+                return track ? `${track.title} - ${track.singer}` : "";
+              })()}
             </h6>
           )}
+
           <div className="progress-bar-container">
             <h6 className="progress-bar-time">{formatTime(currentTime)}</h6>
             <input

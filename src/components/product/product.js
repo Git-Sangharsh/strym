@@ -410,38 +410,52 @@ const Product = () => {
                   className="product-image"
                 />
 
-                <img
-                  src={
-                    isPlaying &&
-                    (showFavorites
-                      ? playingTrackTitle === item.title
-                      : playingIndex === index)
-                      ? pauseIcon
-                      : playIcon
-                  }
-                  alt="Play/Pause"
-                  className={`play-button ${
-                    isPlaying &&
-                    (showFavorites
-                      ? playingTrackTitle === item.title
-                      : playingIndex === index)
-                      ? "play-button-visible"
-                      : ""
-                  }`}
-                  onClick={() => handlePlay(index, item.title)}
-                />
+<img
+  src={
+    isPlaying &&
+    (
+      showFavorites
+        ? playingTrackTitle === item.title
+        : isSorted
+          ? playingTrackTitle === item.title
+          : playingIndex === index
+    )
+      ? pauseIcon
+      : playIcon
+  }
+  alt="Play/Pause"
+  className={`play-button ${
+    isPlaying &&
+    (
+      showFavorites
+        ? playingTrackTitle === item.title
+        : isSorted
+          ? playingTrackTitle === item.title
+          : playingIndex === index
+    )
+      ? "play-button-visible"
+      : ""
+  }`}
+  onClick={() => handlePlay(index, item.title)}
+/>
 
-                <div
-                  className={`product-image-overlay ${
-                    isPlaying &&
-                    (showFavorites
-                      ? playingTrackTitle === item.title
-                      : playingIndex === index)
-                      ? "active"
-                      : ""
-                  }`}
-                  onClick={() => handlePlay(index, item.title)}
-                ></div>
+
+<div
+  className={`product-image-overlay ${
+    isPlaying &&
+    (
+      showFavorites
+        ? playingTrackTitle === item.title
+        : isSorted
+          ? playingTrackTitle === item.title
+          : playingIndex === index
+    )
+      ? "active"
+      : ""
+  }`}
+  onClick={() => handlePlay(index, item.title)}
+></div>
+
               </div>
               <h3 className="product-title">{item.title}</h3>
               <h6 className="product-by">By {item.singer}</h6>

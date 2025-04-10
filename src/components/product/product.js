@@ -366,8 +366,8 @@ const Product = () => {
   };
 
   // console.log(currentTrack?.title)
-  console.log("displayData", displayData);
-  console.log("playingIndex", playingIndex);
+  // console.log("displayData", displayData);
+  // console.log("playingIndex", playingIndex);
   return (
     <div className="product-container">
       <div className="product-sort">
@@ -405,7 +405,7 @@ const Product = () => {
             : ""
         }`}
       >
-        {displayData.length > 0 ? (
+        {Array.isArray(displayData) && displayData.length > 0 ? (
           displayData.map((item, index) => (
             <div key={item._id} className="product-box">
               <div className="product-image-container">
@@ -554,12 +554,19 @@ const Product = () => {
               onClick={handleLoopToggle}
             />
             {currentTrack && (
-              <img
-                src={isFavorite ? fillIcon : favoriteIcon}
-                className="favorite-icon"
-                alt="Favorite"
-                onClick={handleFavorite}
-              />
+              <AnimatePresence mode="wait">
+                <motion.img
+                  onClick={handleFavorite}
+                  key={isFavorite ? "filled" : "outline"}
+                  src={isFavorite ? fillIcon : favoriteIcon}
+                  alt="Favorite"
+                  className="favorite-icon"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                />
+              </AnimatePresence>
             )}
           </div>
           {playingIndex !== null && displayData[playingIndex] && (

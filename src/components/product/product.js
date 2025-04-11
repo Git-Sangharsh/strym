@@ -409,15 +409,19 @@ const Product = () => {
       >
         {Array.isArray(displayData) && displayData.length > 0 ? (
           displayData.map((item, index) => (
-            <div key={item._id} className="product-box">
+            <div key={item._id}   className={`product-box ${
+              isPlaying && playingTrackTitle === item.title ? "playing-box" : ""
+            }`}>
               <div className="product-image-container">
                 <img
                   src={item.image}
                   alt={item.title}
                   className="product-image"
+                  onClick={() => handlePlay(index, item.title, item.singer)}
+
                 />
 
-                <img
+                {/* <img
                   src={
                     isPlaying &&
                     playingTrackTitle === item.title &&
@@ -434,9 +438,9 @@ const Product = () => {
                       : ""
                   }`}
                   onClick={() => handlePlay(index, item.title, item.singer)}
-                />
+                /> */}
 
-                <div
+                {/* <div
                   className={`product-image-overlay ${
                     isPlaying &&
                     playingTrackTitle === item.title &&
@@ -445,10 +449,16 @@ const Product = () => {
                       : ""
                   }`}
                   onClick={() => handlePlay(index, item.title, item.singer)}
-                ></div>
+                ></div> */}
               </div>
               <h3 className="product-title">{item.title}</h3>
-              <h6 className="product-by">By {item.singer}</h6>
+              <h6
+  className={`product-by ${
+    playingTrackTitle === item.title ? "playing-text" : ""
+  }`}
+>
+  By {item.singer}
+</h6>
             </div>
           ))
         ) : searchTerm || showFavorites ? (

@@ -111,6 +111,8 @@
   /* opacity: 0; */
   transition: opacity 0.3s ease-in-out;
   z-index: 999;
+  cursor: pointer;
+
 }
 
 /* Product Image */
@@ -119,6 +121,7 @@
     max-width: 100%;
     height: auto;
     border-radius: 8px;
+    cursor: pointer;
 }
 
 /* Play Button - Initially Hidden */

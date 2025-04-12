@@ -31,6 +31,7 @@ const Product = () => {
   const [displayData, setDisplayData] = useState([]);
   const [playingTrackTitle, setPlayingTrackTitle] = useState(null);
   const [playingTrackSinger, setPlayingTrackSinger] = useState(null);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
 
   const audioRefs = useRef([]);
   const pausedTimeRef = useRef({}); // Store paused time for each track
@@ -160,16 +161,22 @@ const Product = () => {
     };
 
     const audioEndedHandler = () => {
-      if (isLooping) return; // If looping is enabled, the audio will loop automatically
+      if (isLooping) return;
 
       if (shuffleMode) {
         playRandomSong(index);
       } else {
-        // Play next song in sequence
         const nextIndex = (index + 1) % displayData.length;
-        handlePlay(nextIndex, displayData[nextIndex].title, displayData[nextIndex].singer);
+        const nextTrack = displayData[nextIndex];
+
+        // Update the title and singer before switching
+        setPlayingTrackTitle(nextTrack.title);
+        setPlayingTrackSinger(nextTrack.singer);
+
+        handlePlay(nextIndex, nextTrack.title, nextTrack.singer);
       }
     };
+
 
     // Check if we're toggling play/pause for the currently playing track
     const isTogglingCurrentTrack = playingIndex === index && isPlaying;
@@ -258,7 +265,8 @@ const Product = () => {
       if (shuffleMode) {
         playRandomSong(playingIndex);
       } else {
-        const prevIndex = (playingIndex - 1 + displayData.length) % displayData.length;
+        const prevIndex =
+          (playingIndex - 1 + displayData.length) % displayData.length;
         const prevTrack = displayData[prevIndex];
 
         if (prevTrack) {
@@ -409,17 +417,51 @@ const Product = () => {
       >
         {Array.isArray(displayData) && displayData.length > 0 ? (
           displayData.map((item, index) => (
-            <div key={item._id}   className={`product-box ${
-              isPlaying && playingTrackTitle === item.title ? "playing-box" : ""
-            }`}>
+            <div
+              key={item._id}
+              className={`product-box ${
+                isPlaying && playingTrackTitle === item.title
+                  ? "playing-box"
+                  : ""
+              }`}
+            >
               <div className="product-image-container">
                 <img
                   src={item.image}
                   alt={item.title}
                   className="product-image"
                   onClick={() => handlePlay(index, item.title, item.singer)}
-
                 />
+
+                <div
+                  className={`${
+                    isPlaying && playingTrackTitle === item.title
+                      ? "image-wrapper"
+                      : ""
+                  }`}
+                >
+{playingTrackTitle === item.title ? (
+  isPlaying ? (
+    <img
+      src={pauseIcon}
+      alt="Pause"
+      className="play-button play-button-visible"
+      onClick={() => handlePlay(index, item.title, item.singer)}
+    />
+  ) : (
+    <img
+      src={playIcon}
+      alt="Play"
+      className="play-button play-button-visible"
+      onClick={() => handlePlay(index, item.title, item.singer)}
+    />
+  )
+) : null}
+
+
+
+
+                </div>
 
                 {/* <img
                   src={
@@ -453,12 +495,12 @@ const Product = () => {
               </div>
               <h3 className="product-title">{item.title}</h3>
               <h6
-  className={`product-by ${
-    playingTrackTitle === item.title ? "playing-text" : ""
-  }`}
->
-  By {item.singer}
-</h6>
+                className={`product-by ${
+                  playingTrackTitle === item.title ? "playing-text" : ""
+                }`}
+              >
+                By {item.singer}
+              </h6>
             </div>
           ))
         ) : searchTerm || showFavorites ? (

@@ -31,7 +31,6 @@ const Product = () => {
   const [displayData, setDisplayData] = useState([]);
   const [playingTrackTitle, setPlayingTrackTitle] = useState(null);
   const [playingTrackSinger, setPlayingTrackSinger] = useState(null);
-  const [hoveredIndex, setHoveredIndex] = useState(null);
 
   const audioRefs = useRef([]);
   const pausedTimeRef = useRef({}); // Store paused time for each track
@@ -176,7 +175,6 @@ const Product = () => {
         handlePlay(nextIndex, nextTrack.title, nextTrack.singer);
       }
     };
-
 
     // Check if we're toggling play/pause for the currently playing track
     const isTogglingCurrentTrack = playingIndex === index && isPlaying;
@@ -432,36 +430,47 @@ const Product = () => {
                   className="product-image"
                   onClick={() => handlePlay(index, item.title, item.singer)}
                 />
-
-                <div
-                  className={`${
-                    isPlaying && playingTrackTitle === item.title
-                      ? "image-wrapper"
-                      : ""
-                  }`}
-                >
-{playingTrackTitle === item.title ? (
-  isPlaying ? (
-    <img
-      src={pauseIcon}
-      alt="Pause"
-      className="play-button play-button-visible"
-      onClick={() => handlePlay(index, item.title, item.singer)}
-    />
-  ) : (
-    <img
-      src={playIcon}
-      alt="Play"
-      className="play-button play-button-visible"
-      onClick={() => handlePlay(index, item.title, item.singer)}
-    />
-  )
-) : null}
-
-
-
-
-                </div>
+                <AnimatePresence>
+                  <motion.div
+                    className={`${
+                      isPlaying && playingTrackTitle === item.title
+                        ? "image-wrapper"
+                        : ""
+                    }`}
+                    initial={{
+                      opacity:
+                        isPlaying && playingTrackTitle === item.title ? 1 : 0,
+                    }}
+                    animate={{
+                      opacity:
+                        isPlaying && playingTrackTitle === item.title ? 1 : 0,
+                    }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {playingTrackTitle === item.title ? (
+                      isPlaying ? (
+                        <img
+                          src={pauseIcon}
+                          alt="Pause"
+                          className="play-button play-button-visible"
+                          onClick={() =>
+                            handlePlay(index, item.title, item.singer)
+                          }
+                        />
+                      ) : (
+                        <img
+                          src={playIcon}
+                          alt="Play"
+                          className="play-button play-button-visible"
+                          onClick={() =>
+                            handlePlay(index, item.title, item.singer)
+                          }
+                        />
+                      )
+                    ) : null}
+                  </motion.div>
+                </AnimatePresence>
 
                 {/* <img
                   src={

@@ -269,7 +269,7 @@ audio {
     cursor: pointer;
 }
 
-.loop-icon {
+.loop-icon, .like-icon {
     width: 20px !important;
     height: 20px !important;
     transition: all 0.3s ease-in-out;
@@ -452,7 +452,7 @@ audio {
         cursor: pointer;
     }
 
-    .loop-icon {
+    .loop-icon, .like-icon {
         width: 1rem;
         height: 1rem;
         transition: all 0.3s ease-in-out;

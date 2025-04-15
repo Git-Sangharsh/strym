@@ -34,6 +34,11 @@ const Product = () => {
 
   const audioRefs = useRef([]);
   const pausedTimeRef = useRef({}); // Store paused time for each track
+  const shuffleModeRef = useRef(shuffleMode);
+
+  useEffect(() => {
+    shuffleModeRef.current = shuffleMode;
+  }, [shuffleMode]);
 
   useEffect(() => {
     const fetchTracks = async () => {
@@ -127,21 +132,28 @@ const Product = () => {
   const playRandomSong = (currentIndex) => {
     if (displayData.length <= 1) return;
 
-    const availableIndexes = displayData
-      .map((_, i) => i)
-      .filter((i) => i !== currentIndex);
+    // Get the current track title
+    const currentTitle = displayData[currentIndex].title;
 
-    const randomIndex =
-      availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
+    // Filter out the current track by title
+    const availableTracks = displayData.filter(track => track.title !== currentTitle);
 
-    if (audioRefs.current[currentIndex]) {
-      // Store the current time before stopping
-      pausedTimeRef.current[currentIndex] =
-        audioRefs.current[currentIndex].currentTime;
-      audioRefs.current[currentIndex].pause();
+    // Select a random track from the available tracks
+    const randomTrack = availableTracks[Math.floor(Math.random() * availableTracks.length)];
+
+    // Find the index of the random track in the displayData array
+    const randomIndex = displayData.findIndex(track => track.title === randomTrack.title);
+
+    if (randomIndex !== -1) {
+      if (audioRefs.current[currentIndex]) {
+        // Store the current time before stopping
+        pausedTimeRef.current[currentIndex] = audioRefs.current[currentIndex].currentTime;
+        audioRefs.current[currentIndex].pause();
+      }
+
+      // Play the random track using its title and singer
+      handlePlay(randomIndex, randomTrack.title, randomTrack.singer);
     }
-
-    handlePlay(randomIndex);
   };
 
   const handlePlay = (index, title, singer) => {
@@ -159,10 +171,12 @@ const Product = () => {
       setDuration(audioRefs.current[index].duration || 0);
     };
 
+    console.log(shuffleMode)
+
     const audioEndedHandler = () => {
       if (isLooping) return;
 
-      if (shuffleMode) {
+      if (shuffleModeRef.current) {
         playRandomSong(index);
       } else {
         const nextIndex = (index + 1) % displayData.length;
@@ -287,6 +301,8 @@ const Product = () => {
   const handleShuffleToggle = () => {
     setShuffleMode(!shuffleMode);
   };
+
+  // console.log("main shfuflee ", shuffleMode)
 
   const handleSort = () => {
     const sortedData = [...displayData].sort((a, b) => {
@@ -596,6 +612,19 @@ const Product = () => {
               alt=""
               onClick={handleShuffleToggle}
             />
+              {/* <AnimatePresence mode="wait">
+                <motion.img
+                  onClick={handleFavorite}
+                  key={isFavorite ? "filled" : "outline"}
+                  src={isFavorite ? fillIcon : favoriteIcon}
+                  alt="Favorite"
+                  className="like-icon"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                />
+              </AnimatePresence> */}
             <img
               className="playback-play-icon next-previous-icon"
               src={previousIcon}
@@ -639,11 +668,11 @@ const Product = () => {
             )}
           </div>
           {/* Track  Title and Singer   */}
-          {playingIndex !== null && displayData[playingIndex] && (
-            <h6 className="playing-track-name">
-              {playingTrackTitle} - {playingTrackSinger}
-            </h6>
-          )}
+          {isPlayback && playingTrackTitle && (
+      <h6 className="playing-track-name">
+        {playingTrackTitle} - {playingTrackSinger}
+      </h6>
+    )}
           <div className="progress-bar-container">
             <h6 className="progress-bar-time">{formatTime(currentTime)}</h6>
             <input

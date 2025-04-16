@@ -11,15 +11,18 @@ import { useDispatch } from 'react-redux';
 
 const Footer = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const toggleSuggest = () => {
     dispatch({ type: 'SET_SHOW_SUGGEST' });
   };
 
-  const navigate = useNavigate();
-
   const handleAdmin = () => {
     navigate("/admin")
+  };
+
+  const handleAuth = () =>  {
+    dispatch({ type: 'SET_SHOW_GOOGLE_AUTH' });
   };
 
   return (
@@ -34,6 +37,7 @@ const Footer = () => {
             <div className="footer-left-social">
             <h4 className='footer-right-link' onClick={toggleSuggest} >Suggest Music</h4>
             <h4 className='footer-right-link' onClick={handleAdmin}>Admin</h4>
+            <h4 className='footer-right-link' onClick={handleAuth}>Auth</h4>
             <h4 className='footer-right-link'>Contact Us</h4>
             <h4 className='footer-right-link'>About Us</h4>
             </div>

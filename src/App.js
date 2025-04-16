@@ -10,6 +10,7 @@ import ProtectedRoute from "./components/protectedroute/protectedroute";
 import Trash from "./components/trash/trash";
 import Suggest from "./components/suggest/suggest";
 // import Suggest from "./components/suggest/suggest";
+import GoogleAuthModel from "./components/auth/GoogleAuthModal.js";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
                 <Product />
               </div>
               <Suggest />
+              <GoogleAuthModel />
               <Footer />
             </div>
           }

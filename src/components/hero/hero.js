@@ -43,8 +43,8 @@ const Hero = () => {
                     <div className="hero-box"></div>
                     <div className="hero-box"></div> */}
           {trackThumbnail.length > 0 ? (
-            trackThumbnail.map((i) => (
-              <div className="hero-box">
+            trackThumbnail.map((i, index) => (
+              <div key={index} className="hero-box">
                 <img
                   src={`${i.image}`}
                   alt={i.title}

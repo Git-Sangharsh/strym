@@ -46,9 +46,15 @@ const Product = () => {
         const response = await axios.get(
           `${process.env.REACT_APP_BACKEND_API}/tracks`
         );
-        setApi(response.data);
-        setOriginalData(response.data); // Save original data
-        setDisplayData(response.data);
+
+        // Sort the tracks alphabetically by title
+        const sortedTracks = response.data.sort((a, b) =>
+          a.title.localeCompare(b.title)
+        );
+
+        setApi(sortedTracks);
+        setOriginalData(sortedTracks); // Save sorted original data
+        setDisplayData(sortedTracks);
       } catch (err) {
         console.error("Error fetching tracks", err);
       }
@@ -62,9 +68,10 @@ const Product = () => {
     };
   }, []);
 
-  // console.log(api
 
-  // )
+  // console.log("api Data", api)
+  // console.log("diaplay Data", displayData)
+  // console.log("original Data", originalData)
 
   // Filter data based on search term and favorites toggle
   useEffect(() => {

@@ -2,7 +2,11 @@ import { configureStore } from "@reduxjs/toolkit";
 
 const initialState = {
   showSuggest: false,
-  showGoogleAuth: false
+  showGoogleAuth: false,
+  userState: null,
+  playlistState: false,
+  userEmail : null,
+  showAddPlaylist: null
 };
 
 const Reducer = (state = initialState, action) => {
@@ -14,6 +18,15 @@ const Reducer = (state = initialState, action) => {
         ...state,
         showGoogleAuth: !state.showGoogleAuth,
       };
+    case "SET_USER":
+      return { ...state, userState: action.payload };
+    case "LOGOUT_USER":
+      return { ...state, userState: null };
+    case "SET_PLAYLIST_MODAL":
+      return { ...state, playlistState: !state.playlistState };
+    case "TOGGLE_ADD_PLAYLIST":
+      return { ...state, showAddPlaylist: !state.showAddPlaylist };
+
     default:
       return state;
   }

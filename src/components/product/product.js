@@ -8,11 +8,14 @@ import nextIcon from "../assets/next.svg";
 import previousIcon from "../assets/previous.svg";
 import loopIcon from "../assets/loop.svg";
 import shuffleIcon from "../assets/shuffle.svg";
-import sortIcon from "../assets/sort.svg";
+// import sortIcon from "../assets/sort.svg";
 import favoriteIcon from "../assets/favorite.svg";
 import fillIcon from "../assets/fill.svg";
+import addSvg from "../assets/add.svg";
+import { useDispatch } from "react-redux";
 
 const Product = () => {
+  const dispatch = useDispatch();
   const [api, setApi] = useState([]);
   const [originalData, setOriginalData] = useState([]); // Store original data for filtering
   const [playingIndex, setPlayingIndex] = useState(null);
@@ -22,7 +25,7 @@ const Product = () => {
   const [duration, setDuration] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
   const [shuffleMode, setShuffleMode] = useState(false);
-  const [isSorted, setIsSorted] = useState(false);
+  // const [isSorted, setIsSorted] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // New state for search term
   const [storeFavorites, setStoreFavorites] = useState(() => {
     return JSON.parse(localStorage.getItem("favorites")) || [];
@@ -68,7 +71,6 @@ const Product = () => {
     };
   }, []);
 
-
   // console.log("api Data", api)
   // console.log("diaplay Data", displayData)
   // console.log("original Data", originalData)
@@ -92,11 +94,11 @@ const Product = () => {
     }
 
     // Re-apply sorting if it's enabled
-    if (isSorted) {
-      filteredData = [...filteredData].sort((a, b) =>
-        a.title.localeCompare(b.title)
-      );
-    }
+    // if (isSorted) {
+    //   filteredData = [...filteredData].sort((a, b) =>
+    //     a.title.localeCompare(b.title)
+    //   );
+    // }
 
     setDisplayData(filteredData);
   }, [
@@ -106,7 +108,7 @@ const Product = () => {
     storeFavorites,
     api,
     playingIndex,
-    isSorted, // <-- Add this dependency
+    // isSorted,
   ]);
 
   // Function to stop all audio
@@ -143,18 +145,24 @@ const Product = () => {
     const currentTitle = displayData[currentIndex].title;
 
     // Filter out the current track by title
-    const availableTracks = displayData.filter(track => track.title !== currentTitle);
+    const availableTracks = displayData.filter(
+      (track) => track.title !== currentTitle
+    );
 
     // Select a random track from the available tracks
-    const randomTrack = availableTracks[Math.floor(Math.random() * availableTracks.length)];
+    const randomTrack =
+      availableTracks[Math.floor(Math.random() * availableTracks.length)];
 
     // Find the index of the random track in the displayData array
-    const randomIndex = displayData.findIndex(track => track.title === randomTrack.title);
+    const randomIndex = displayData.findIndex(
+      (track) => track.title === randomTrack.title
+    );
 
     if (randomIndex !== -1) {
       if (audioRefs.current[currentIndex]) {
         // Store the current time before stopping
-        pausedTimeRef.current[currentIndex] = audioRefs.current[currentIndex].currentTime;
+        pausedTimeRef.current[currentIndex] =
+          audioRefs.current[currentIndex].currentTime;
         audioRefs.current[currentIndex].pause();
       }
 
@@ -178,7 +186,7 @@ const Product = () => {
       setDuration(audioRefs.current[index].duration || 0);
     };
 
-    console.log(shuffleMode)
+    // console.log(shuffleMode);
 
     const audioEndedHandler = () => {
       if (isLooping) return;
@@ -311,16 +319,16 @@ const Product = () => {
 
   // console.log("main shfuflee ", shuffleMode)
 
-  const handleSort = () => {
-    const sortedData = [...displayData].sort((a, b) => {
-      if (isSorted) {
-        return b.title.localeCompare(a.title); // Z-A sort
-      }
-      return a.title.localeCompare(b.title); // A-Z sort
-    });
-    setDisplayData(sortedData);
-    setIsSorted(!isSorted); // Toggle the sort state
-  };
+  // const handleSort = () => {
+  //   const sortedData = [...displayData].sort((a, b) => {
+  //     if (isSorted) {
+  //       return b.title.localeCompare(a.title); // Z-A sort
+  //     }
+  //     return a.title.localeCompare(b.title); // A-Z sort
+  //   });
+  //   setDisplayData(sortedData);
+  //   setIsSorted(!isSorted); // Toggle the sort state
+  // };
 
   useEffect(() => {
     // Update loop status for current audio when looping state changes
@@ -394,6 +402,13 @@ const Product = () => {
     setShowFavorites(!showFavorites);
   };
 
+  const handlePlaylistModal = () => {
+    dispatch({ type: "SET_PLAYLIST_MODAL" });
+  };
+  const handleAddTrackToPlaylist = (title) => {
+    console.log("title is", title);
+  };
+
   // console.log(currentTrack?.title);
   // console.log("displayData", displayData);
   // console.log("playingIndex", playingIndex);
@@ -408,9 +423,10 @@ const Product = () => {
         </div>
         <div className="sort">
           <img
-            onClick={handleSort}
-            className={`sort-icon ${isSorted ? "bg-pad" : ""}`}
-            src={sortIcon}
+            // className={`sort-icon ${isSorted ? "bg-pad" : ""}`}
+            onClick={handlePlaylistModal}
+            className="sort-icon"
+            src={addSvg}
             alt="sort"
           />
         </div>
@@ -619,7 +635,7 @@ const Product = () => {
               alt=""
               onClick={handleShuffleToggle}
             />
-              {/* <AnimatePresence mode="wait">
+            {/* <AnimatePresence mode="wait">
                 <motion.img
                   onClick={handleFavorite}
                   key={isFavorite ? "filled" : "outline"}
@@ -673,13 +689,19 @@ const Product = () => {
                 />
               </AnimatePresence>
             )}
+            <img
+              src={addSvg}
+              alt=""
+              className="playlist-add-icon"
+              onClick={() => handleAddTrackToPlaylist(playingTrackTitle)}
+            />
           </div>
           {/* Track  Title and Singer   */}
           {isPlayback && playingTrackTitle && (
-      <h6 className="playing-track-name">
-        {playingTrackTitle} - {playingTrackSinger}
-      </h6>
-    )}
+            <h6 className="playing-track-name">
+              {playingTrackTitle} - {playingTrackSinger}
+            </h6>
+          )}
           <div className="progress-bar-container">
             <h6 className="progress-bar-time">{formatTime(currentTime)}</h6>
             <input

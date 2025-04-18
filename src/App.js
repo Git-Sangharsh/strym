@@ -11,6 +11,8 @@ import Trash from "./components/trash/trash";
 import Suggest from "./components/suggest/suggest";
 // import Suggest from "./components/suggest/suggest";
 import GoogleAuthModel from "./components/auth/GoogleAuthModal.js";
+import CreatePlayListModel from "./components/playlist/CreatePlaylistModal.js";
+import AddPlaylist from "./components/addplaylist/Addplaylist.js"
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
               </div>
               <Suggest />
               <GoogleAuthModel />
+              <CreatePlayListModel />
+              <AddPlaylist />
               <Footer />
             </div>
           }

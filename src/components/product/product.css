@@ -384,6 +384,17 @@ audio {
 
 }
 
+.playlist-add-icon {
+    /* background-color: red; */
+    width: 1.5rem;
+    position: absolute;
+    right: 5%;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+
+}
+
+
 .like-section {
     width: 93.8%;
     /* margin: 4vh 0vh; */

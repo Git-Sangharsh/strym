@@ -13,13 +13,14 @@ const Addplaylist = () => {
     const fetchPlaylists = async () => {
       try {
         const token = localStorage.getItem("google_token");
-        const decoded = token ? JSON.parse(atob(token.split(".")[1])) : null;
-        const email = decoded?.email;
 
         const response = await axios.post(
-          `${process.env.REACT_APP_BACKEND_API}/get-playlists`,
+          `${process.env.REACT_APP_BACKEND_API}/get-playlist`,
+          {},
           {
-            email,
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 
@@ -32,9 +33,11 @@ const Addplaylist = () => {
     fetchPlaylists();
   }, []);
 
+
   const handleClose = () => {
     dispatch({ type: "TOGGLE_ADD_PLAYLIST" });
   };
+
 
   return (
     <>

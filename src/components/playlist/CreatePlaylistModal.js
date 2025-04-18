@@ -17,8 +17,9 @@ const CreatePlaylistModal = () => {
     setPlaylistName("");
   };
 
-  const googleToken = localStorage.getItem("google_token");
-  const decodedGoogleToken = jwtDecode(googleToken);
+  // const googleToken = localStorage.getItem("google_token");
+  // const decodedGoogleToken = googleToken ? jwtDecode(googleToken) : null;
+
   // console.log("hello", decodedGoogleToken.email);
 
   const handleCreatePlaylist = async () => {
@@ -27,13 +28,20 @@ const CreatePlaylistModal = () => {
       return;
     }
 
+    const googleToken = localStorage.getItem("google_token");
+    const decodedGoogleToken = googleToken ? jwtDecode(googleToken) : null;
+
+    if (!decodedGoogleToken?.email) {
+      toast.error("Authentication error. Please log in again.");
+      return;
+    }
+
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_BACKEND_API}/create-playlist`,
         {
-          // email: user.email,
           email: decodedGoogleToken.email,
-          playlistName
+          playlistName,
         }
       );
 

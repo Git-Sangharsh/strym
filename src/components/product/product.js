@@ -409,6 +409,10 @@ const Product = () => {
     console.log("title is", title);
   };
 
+  const handleAddPlaylist = ()  => {
+    dispatch({ type: "TOGGLE_ADD_PLAYLIST" });
+  }
+
   // console.log(currentTrack?.title);
   // console.log("displayData", displayData);
   // console.log("playingIndex", playingIndex);
@@ -693,8 +697,10 @@ const Product = () => {
               src={addSvg}
               alt=""
               className="playlist-add-icon"
-              onClick={() => handleAddTrackToPlaylist(playingTrackTitle)}
-            />
+              onClick={() => {
+                handleAddTrackToPlaylist(playingTrackTitle);
+                handleAddPlaylist();
+              }}            />
           </div>
           {/* Track  Title and Singer   */}
           {isPlayback && playingTrackTitle && (

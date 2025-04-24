@@ -1,0 +1,37 @@
+.playlist-header {
+    margin-bottom: 1.5rem;
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: #00ffae; /* a bright neon green/blue to match your main theme */
+    text-align: center;
+  }
+
+  .playlist-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .playlist-item {
+    background: #1c1c1c; /* dark background */
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #eaeaea; /* light text */
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+
+  .playlist-item:hover {
+    background-color: #00ffae;
+    color: #000;
+    transform: scale(1.02);
+  }
+  .playlist-auth-modal{
+    background: #121212;
+    padding: 2rem;
+    border-radius: 16px;
+    /* box-shadow: 0 0 20px rgba(0, 255, 174, 0.2);  */
+    /* box-shadow: 0 0 60px rgba(255, 255, 255, 0.1); */
+  }

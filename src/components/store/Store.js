@@ -5,8 +5,10 @@ const initialState = {
   showGoogleAuth: false,
   userState: null,
   playlistState: false,
-  userEmail : null,
-  showAddPlaylist: null
+  userEmail: null,
+  showAddPlaylist: null,
+  storeTrackTitle: null,
+  storeGetPlaylist: [],
 };
 
 const Reducer = (state = initialState, action) => {
@@ -26,7 +28,10 @@ const Reducer = (state = initialState, action) => {
       return { ...state, playlistState: !state.playlistState };
     case "TOGGLE_ADD_PLAYLIST":
       return { ...state, showAddPlaylist: !state.showAddPlaylist };
-
+    case "SET_SHOW_TRACK_TITLE":
+      return { ...state, storeTrackTitle: action.payload };
+      case "SET_STORE_GET_PLAYLIST":
+        return  {...state, storeGetPlaylist: action.payload};
     default:
       return state;
   }

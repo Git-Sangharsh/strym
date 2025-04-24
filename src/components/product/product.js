@@ -12,7 +12,7 @@ import shuffleIcon from "../assets/shuffle.svg";
 import favoriteIcon from "../assets/favorite.svg";
 import fillIcon from "../assets/fill.svg";
 import addSvg from "../assets/add.svg";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 const Product = () => {
   const dispatch = useDispatch();
@@ -406,12 +406,66 @@ const Product = () => {
     dispatch({ type: "SET_PLAYLIST_MODAL" });
   };
   const handleAddTrackToPlaylist = (title) => {
-    console.log("title is", title);
+    // console.log("title is", title);
+
+    dispatch({ type: "SET_SHOW_TRACK_TITLE", payload: title });
   };
 
-  const handleAddPlaylist = ()  => {
+  const handleAddPlaylist = () => {
     dispatch({ type: "TOGGLE_ADD_PLAYLIST" });
-  }
+  };
+
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+      try {
+        const token = localStorage.getItem("google_token");
+
+        const response = await axios.post(
+          `${process.env.REACT_APP_BACKEND_API}/get-playlist`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        // console.log(response.data)
+        dispatch({
+          type: "SET_STORE_GET_PLAYLIST",
+          payload: response.data.playlists,
+        });
+      } catch (error) {
+        console.error("Error fetching playlists:", error);
+      }
+    };
+
+    fetchPlaylists();
+  }, [dispatch]);
+
+  const storeGetPlaylist = useSelector((state) => state.storeGetPlaylist);
+
+  const handlePlaylistTrack = async (playlistName) => {
+    try {
+      const token = localStorage.getItem("google_token");
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_API}/get-specific-playlist`,
+        {
+          playlistName,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setDisplayData(response.data.playlist.tracks);
+      // console.log(response.data)
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   // console.log(currentTrack?.title);
   // console.log("displayData", displayData);
@@ -449,6 +503,16 @@ const Product = () => {
           {showFavorites ? "Show All Songs" : "Liked Songs"}
         </h1>
       </div>
+      <div className="playlist-section">
+        {storeGetPlaylist.map((i, index) => (
+          <div className="playlist-section-div" key={index} onClick={() => handlePlaylistTrack(i.name)}>
+            <h1 className="like-section-title playlist-section-title">
+              {i.name}
+            </h1>
+          </div>
+        ))}
+      </div>
+
       <div
         className={`product-wrapper ${
           searchTerm.trim() !== "" || showFavorites
@@ -514,36 +578,6 @@ const Product = () => {
                     ) : null}
                   </motion.div>
                 </AnimatePresence>
-
-                {/* <img
-                  src={
-                    isPlaying &&
-                    playingTrackTitle === item.title &&
-                    playingTrackSinger === item.singer
-                      ? pauseIcon
-                      : playIcon
-                  }
-                  alt="Play/Pause"
-                  className={`play-button ${
-                    isPlaying &&
-                    playingTrackTitle === item.title &&
-                    playingTrackSinger === item.singer
-                      ? "play-button-visible"
-                      : ""
-                  }`}
-                  onClick={() => handlePlay(index, item.title, item.singer)}
-                /> */}
-
-                {/* <div
-                  className={`product-image-overlay ${
-                    isPlaying &&
-                    playingTrackTitle === item.title &&
-                    playingTrackSinger === item.singer
-                      ? "active"
-                      : ""
-                  }`}
-                  onClick={() => handlePlay(index, item.title, item.singer)}
-                ></div> */}
               </div>
               <h3 className="product-title">{item.title}</h3>
               <h6
@@ -700,7 +734,8 @@ const Product = () => {
               onClick={() => {
                 handleAddTrackToPlaylist(playingTrackTitle);
                 handleAddPlaylist();
-              }}            />
+              }}
+            />
           </div>
           {/* Track  Title and Singer   */}
           {isPlayback && playingTrackTitle && (

@@ -13,11 +13,10 @@ import favoriteIcon from "../assets/favorite.svg";
 import fillIcon from "../assets/fill.svg";
 import addSvg from "../assets/add.svg";
 import { useDispatch, useSelector } from "react-redux";
+import { ToastContainer, toast } from "react-toastify";
 
 const Product = () => {
   const dispatch = useDispatch();
-  const [api, setApi] = useState([]);
-  const [originalData, setOriginalData] = useState([]); // Store original data for filtering
   const [playingIndex, setPlayingIndex] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayback, setIsPlayback] = useState(false);
@@ -27,13 +26,15 @@ const Product = () => {
   const [shuffleMode, setShuffleMode] = useState(false);
   // const [isSorted, setIsSorted] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // New state for search term
-  const [storeFavorites, setStoreFavorites] = useState(() => {
-    return JSON.parse(localStorage.getItem("favorites")) || [];
-  });
   const [showFavorites, setShowFavorites] = useState(false);
+  const [likeSongs, setlikeSongs] = useState([]);
   const [displayData, setDisplayData] = useState([]);
+  const [allTracks, setAllTracks] = useState([]);
   const [playingTrackTitle, setPlayingTrackTitle] = useState(null);
   const [playingTrackSinger, setPlayingTrackSinger] = useState(null);
+  const [activePlaylist, setActivePlaylist] = useState(null); // track active playlist
+  const [selectedTrackId, setSelectedTrackId] = useState(null);
+
 
   const audioRefs = useRef([]);
   const pausedTimeRef = useRef({}); // Store paused time for each track
@@ -55,9 +56,10 @@ const Product = () => {
           a.title.localeCompare(b.title)
         );
 
-        setApi(sortedTracks);
-        setOriginalData(sortedTracks); // Save sorted original data
+        // setApi(sortedTracks);
+        // setOriginalData(sortedTracks); // Save sorted original data
         setDisplayData(sortedTracks);
+        setAllTracks(sortedTracks); // full copy
       } catch (err) {
         console.error("Error fetching tracks", err);
       }
@@ -75,41 +77,59 @@ const Product = () => {
   // console.log("diaplay Data", displayData)
   // console.log("original Data", originalData)
 
+  const getLikedSongs = async () => {
+    try {
+      const token = localStorage.getItem("google_token");
+
+      if (!token) {
+        console.error("No token found in localStorage");
+        return;
+      }
+
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKEND_API}/liked-tracks`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // console.log(response.data);
+      setlikeSongs(response.data.likedTracks)
+      // Do something with the data if needed
+    } catch (err) {
+      console.error("Error fetching liked tracks:", err);
+    }
+  };
+
+  useEffect(() => {
+    getLikedSongs();
+  }, []);
+
+
   // Filter data based on search term and favorites toggle
   useEffect(() => {
-    let filteredData = originalData;
+    let filtered = allTracks;
 
     if (searchTerm.trim() !== "") {
-      filteredData = filteredData.filter(
+      filtered = filtered.filter(
         (track) =>
           track.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           track.singer.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    if (showFavorites) {
-      filteredData = filteredData.filter((track) =>
-        storeFavorites.includes(track.title)
-      );
+    const finalDisplayData = showFavorites ? likeSongs : filtered;
+    setDisplayData(finalDisplayData);
+
+    // 🛡️ If the currently selected track is no longer in the list, clear it
+    const stillExists = finalDisplayData.some(track => track._id === selectedTrackId);
+    if (!stillExists) {
+      setSelectedTrackId(null);
     }
+  }, [searchTerm, showFavorites, likeSongs, allTracks, selectedTrackId]);
 
-    // Re-apply sorting if it's enabled
-    // if (isSorted) {
-    //   filteredData = [...filteredData].sort((a, b) =>
-    //     a.title.localeCompare(b.title)
-    //   );
-    // }
-
-    setDisplayData(filteredData);
-  }, [
-    searchTerm,
-    showFavorites,
-    originalData,
-    storeFavorites,
-    api,
-    playingIndex,
-    // isSorted,
-  ]);
 
   // Function to stop all audio
   const stopAllAudio = () => {
@@ -317,19 +337,6 @@ const Product = () => {
     setShuffleMode(!shuffleMode);
   };
 
-  // console.log("main shfuflee ", shuffleMode)
-
-  // const handleSort = () => {
-  //   const sortedData = [...displayData].sort((a, b) => {
-  //     if (isSorted) {
-  //       return b.title.localeCompare(a.title); // Z-A sort
-  //     }
-  //     return a.title.localeCompare(b.title); // A-Z sort
-  //   });
-  //   setDisplayData(sortedData);
-  //   setIsSorted(!isSorted); // Toggle the sort state
-  // };
-
   useEffect(() => {
     // Update loop status for current audio when looping state changes
     if (playingIndex !== null && audioRefs.current[playingIndex]) {
@@ -376,26 +383,52 @@ const Product = () => {
     }
   };
 
-  const currentTrack = playingIndex !== null ? displayData[playingIndex] : null;
+  const currentTrack = displayData.find(track => track._id === selectedTrackId) || null;
 
-  const isFavorite = currentTrack
-    ? storeFavorites.includes(currentTrack.title)
-    : false;
 
-  const handleFavorite = () => {
-    if (!currentTrack) return;
+  // console.log(currentTrack._id)
+  const isFavorite =
+  currentTrack &&
+  likeSongs.some(track => track._id === currentTrack._id) &&
+  allTracks.some(track => track._id === currentTrack._id);
 
-    const title = currentTrack.title;
-    let updatedFavorites;
 
-    if (storeFavorites.includes(title)) {
-      updatedFavorites = storeFavorites.filter((fav) => fav !== title); // remove
-    } else {
-      updatedFavorites = [...storeFavorites, title]; // add
+  // console.log(likeSongs)
+  // console.log(allTracks)
+  // console.log(currentTrack)
+
+
+
+  const handleFavorite = async () => {
+    try {
+      const token = localStorage.getItem("google_token");
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_API}/toggle-like`,
+        {
+          trackId: currentTrack._id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("toggle-like response:", response.data);
+
+      try {
+        await getLikedSongs();
+      } catch (err) {
+        console.error("getLikedSongs error:", err);
+      }
+
+      toast.success(response?.data?.message || "Liked/unliked successfully");
+
+    } catch (error) {
+      console.error("Error in handleFavorite:", error);
+      // toast.error("Something went wrong!");
     }
-
-    setStoreFavorites(updatedFavorites);
-    localStorage.setItem("favorites", JSON.stringify(updatedFavorites));
   };
 
   const handleShowFavorites = () => {
@@ -445,23 +478,28 @@ const Product = () => {
   const storeGetPlaylist = useSelector((state) => state.storeGetPlaylist);
 
   const handlePlaylistTrack = async (playlistName) => {
+    if (activePlaylist === playlistName) {
+      // If clicked again on same playlist, toggle back to all tracks
+      setDisplayData(allTracks);
+      setActivePlaylist(null);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("google_token");
 
       const response = await axios.post(
         `${process.env.REACT_APP_BACKEND_API}/get-specific-playlist`,
-        {
-          playlistName,
-        },
+        { playlistName },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      setDisplayData(response.data.playlist.tracks);
-      // console.log(response.data)
 
+      setDisplayData(response.data.playlist.tracks);
+      setActivePlaylist(playlistName); // Set the current active playlist
     } catch (err) {
       console.log(err);
     }
@@ -489,6 +527,7 @@ const Product = () => {
           />
         </div>
       </div>
+
       <div className="product-search">
         <input
           className="search-input"
@@ -498,15 +537,38 @@ const Product = () => {
           onChange={handleSearchChange}
         />
       </div>
+      {/* <div className="like-section">
+
+      <h1 className="like-section-title">
+          All Tracks
+        </h1>
+      </div> */}
+
       <div className="like-section" onClick={handleShowFavorites}>
-        <h1 className="like-section-title">
+        <h1
+          className={`like-section-title ${
+            showFavorites ? "show-all" : "clr-white"
+          }`}
+        >
           {showFavorites ? "Show All Songs" : "Liked Songs"}
         </h1>
       </div>
+
       <div className="playlist-section">
         {storeGetPlaylist.map((i, index) => (
-          <div className="playlist-section-div" key={index} onClick={() => handlePlaylistTrack(i.name)}>
-            <h1 className="like-section-title playlist-section-title">
+          <div
+            className="playlist-section-div"
+            key={index}
+            onClick={() => {
+              handlePlaylistTrack(i.name);
+              setActivePlaylist(i.name); // Set clicked playlist
+            }}
+          >
+            <h1
+              className={`like-section-title ${
+                activePlaylist === i.name ? "like-section-title" : " clr-white"
+              }`}
+            >
               {i.name}
             </h1>
           </div>
@@ -535,8 +597,10 @@ const Product = () => {
                   src={item.image}
                   alt={item.title}
                   className="product-image"
-                  onClick={() => handlePlay(index, item.title, item.singer)}
-                />
+                  onClick={() => {
+                    handlePlay(index, item.title, item.singer);
+                    setSelectedTrackId(item._id);
+                  }}                />
                 <AnimatePresence>
                   <motion.div
                     className={`${
@@ -712,21 +776,28 @@ const Product = () => {
               alt=""
               onClick={handleLoopToggle}
             />
-            {currentTrack && (
+
               <AnimatePresence mode="wait">
-                <motion.img
-                  onClick={handleFavorite}
-                  key={isFavorite ? "filled" : "outline"}
-                  src={isFavorite ? fillIcon : favoriteIcon}
-                  alt="Favorite"
-                  className="favorite-icon"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                />
-              </AnimatePresence>
-            )}
+  <motion.img
+    onClick={handleFavorite}
+    key={currentTrack === null ? "default" : isFavorite ? "filled" : "outline"}
+    src={
+      currentTrack === null
+        ? favoriteIcon
+        : isFavorite
+        ? fillIcon
+        : favoriteIcon
+    }
+    alt="Favorite"
+    className="favorite-icon"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.3 }}
+  />
+</AnimatePresence>
+
+
             <img
               src={addSvg}
               alt=""
@@ -762,6 +833,8 @@ const Product = () => {
           </div>
         </motion.div>
       </AnimatePresence>
+      <ToastContainer position="bottom-right" autoClose={3000} />
+
     </div>
   );
 };

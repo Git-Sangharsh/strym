@@ -456,6 +456,10 @@ audio {
 
 }
 
+.clr-white{
+    color: white;
+}
+
 /* Responsive Design */
 @media screen and (max-width: 1200px) {
     .product-box {

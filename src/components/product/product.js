@@ -13,7 +13,7 @@ import favoriteIcon from "../assets/favorite.svg";
 import fillIcon from "../assets/fill.svg";
 import addSvg from "../assets/add.svg";
 import { useDispatch, useSelector } from "react-redux";
-import { ToastContainer, toast } from "react-toastify";
+import {  toast } from "react-toastify";
 
 const Product = () => {
   const dispatch = useDispatch();
@@ -833,7 +833,6 @@ const Product = () => {
           </div>
         </motion.div>
       </AnimatePresence>
-      <ToastContainer position="bottom-right" autoClose={3000} />
 
     </div>
   );

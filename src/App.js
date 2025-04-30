@@ -12,11 +12,14 @@ import Suggest from "./components/suggest/suggest";
 // import Suggest from "./components/suggest/suggest";
 import GoogleAuthModel from "./components/auth/GoogleAuthModal.js";
 import CreatePlayListModel from "./components/playlist/CreatePlaylistModal.js";
-import AddPlaylist from "./components/addplaylist/Addplaylist.js"
+import AddPlaylist from "./components/addplaylist/Addplaylist.js";
+import { ToastContainer } from "react-toastify";
 
 function App() {
   return (
     <Router>
+      <ToastContainer position="bottom-right" autoClose={3000} limit={1} />
+
       <Routes>
         <Route
           path="/"

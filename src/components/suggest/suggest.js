@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./Suggest.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { ToastContainer, toast } from "react-toastify";
+import {  toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import axios from "axios";
@@ -41,7 +41,7 @@ const Suggest = () => {
         toast.success("Thanks for the suggestion! 🎶");
         console.log("Server response:", response.data);
         closeModal();
-        
+
       } else {
         toast.error("Something went wrong.");
       }
@@ -111,7 +111,6 @@ const Suggest = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      <ToastContainer position="bottom-right" autoClose={6000} />
     </>
   );
 };

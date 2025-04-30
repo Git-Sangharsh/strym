@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import "./admin.css";
 import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const Admin = () => {
@@ -95,7 +95,6 @@ const Admin = () => {
           )}
         </form>
       </div>
-      <ToastContainer position="bottom-right" autoClose={6000} />
     </div>
   );
 };

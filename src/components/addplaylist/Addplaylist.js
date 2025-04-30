@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import "./Addplaylist.css";
-import { ToastContainer, toast } from "react-toastify";
+import {  toast } from "react-toastify";
 
 
 const Addplaylist = () => {
@@ -110,8 +110,6 @@ const Addplaylist = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      <ToastContainer position="bottom-right" autoClose={3000} />
-
     </>
   );
 };

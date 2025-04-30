@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import "./upload.css";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const Upload = () => {
@@ -91,7 +91,6 @@ const Upload = () => {
 
         <button type="submit">Upload</button>
       </form>
-      <ToastContainer position="bottom-right" autoClose={6000} />
     </div>
   );
 };

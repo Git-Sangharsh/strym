@@ -2,7 +2,7 @@ import React from "react";
 import "./GoogleAuthModal.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { GoogleLogin } from "@react-oauth/google";
@@ -59,7 +59,7 @@ const GoogleAuthModal = () => {
   const handleLogout = () => {
     localStorage.removeItem("google_token");
     dispatch({ type: "LOGOUT_USER" });
-    toast.info("Logged out successfully.");
+    toast.info("Logged out successfully.", { autoClose: 3000 });
   };
 
   const handleLoginError = () => {
@@ -131,7 +131,6 @@ const GoogleAuthModal = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      <ToastContainer position="bottom-right" autoClose={6000} />
     </>
   );
 };

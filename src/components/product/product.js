@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import "./product.css";
@@ -76,6 +76,8 @@ const Product = () => {
   // console.log("api Data", api)
   // console.log("diaplay Data", displayData)
   // console.log("original Data", originalData)
+
+
 
   const getLikedSongs = async () => {
     try {
@@ -356,32 +358,49 @@ const Product = () => {
     };
   }, []);
 
-  // Handle play/pause toggle for the playback bar
-  const handlePlaybackToggle = () => {
-    if (playingIndex !== null) {
-      if (isPlaying) {
-        // Pause current audio
-        const audio = audioRefs.current[playingIndex];
-        if (audio) {
-          const trackId = displayData[playingIndex]?._id;
-          if (trackId) {
-            pausedTimeRef.current[trackId] = audio.currentTime;
-          }
-          audio.pause();
-          setIsPlaying(false);
+// Usiig useCallback to memoize the handlePlaybackToggle function for play/pause toggle for the playback bar
+const handlePlaybackToggle = useCallback(() => {
+  if (playingIndex !== null) {
+    if (isPlaying) {
+      // Pause current audio
+      const audio = audioRefs.current[playingIndex];
+      if (audio) {
+        const trackId = displayData[playingIndex]?._id;
+        if (trackId) {
+          pausedTimeRef.current[trackId] = audio.currentTime;
         }
-      } else {
-        // Resume current audio
-        const audio = audioRefs.current[playingIndex];
-        if (audio) {
-          audio.play().catch((error) => {
-            console.error("Error playing audio:", error);
-          });
-          setIsPlaying(true);
-        }
+        audio.pause();
+        setIsPlaying(false);
+      }
+    } else {
+      // Resume current audio
+      const audio = audioRefs.current[playingIndex];
+      if (audio) {
+        audio.play().catch((error) => {
+          console.error("Error playing audio:", error);
+        });
+        setIsPlaying(true);
       }
     }
+  }
+}, [playingIndex, isPlaying, displayData]);
+
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+      e.preventDefault(); // Prevent page scrolling on space press
+      handlePlaybackToggle();
+    }
   };
+
+  // Add event listener
+  document.addEventListener('keydown', handleKeyDown);
+
+  // Remove event listener on cleanup
+  return () => {
+    document.removeEventListener('keydown', handleKeyDown);
+  };
+}, [handlePlaybackToggle]);
 
   const currentTrack = displayData.find(track => track._id === selectedTrackId) || null;
 

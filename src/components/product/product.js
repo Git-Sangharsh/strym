@@ -34,7 +34,7 @@ const Product = () => {
   const [playingTrackSinger, setPlayingTrackSinger] = useState(null);
   const [activePlaylist, setActivePlaylist] = useState(null); // track active playlist
   const [selectedTrackId, setSelectedTrackId] = useState(null);
-
+  const isLogin = useSelector((state) => state.isLogin)
 
   const audioRefs = useRef([]);
   const pausedTimeRef = useRef({}); // Store paused time for each track
@@ -434,7 +434,7 @@ useEffect(() => {
         }
       );
 
-      console.log("toggle-like response:", response.data);
+      // console.log("toggle-like response:", response.data);
 
       try {
         await getLikedSongs();
@@ -492,7 +492,10 @@ useEffect(() => {
     };
 
     fetchPlaylists();
-  }, [dispatch]);
+    if (isLogin) {
+      fetchPlaylists(); // only run if user is logged in
+    }
+  }, [dispatch, isLogin]);
 
   const storeGetPlaylist = useSelector((state) => state.storeGetPlaylist);
 

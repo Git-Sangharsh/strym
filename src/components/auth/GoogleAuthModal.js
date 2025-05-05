@@ -50,6 +50,10 @@ const GoogleAuthModal = () => {
 
       console.log("Response Data:", response.data);
       toast.success("User logged in successfully!");
+      dispatch({
+        type: "SET_IS_LOGIN",
+        payload: true
+      });
     } catch (error) {
       console.error("Error during login:", error);
       toast.error("Login failed. Please try again.");

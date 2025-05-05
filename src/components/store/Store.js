@@ -9,6 +9,7 @@ const initialState = {
   showAddPlaylist: null,
   storeTrackTitle: null,
   storeGetPlaylist: [],
+  isLogin: false,
 };
 
 const Reducer = (state = initialState, action) => {
@@ -30,8 +31,10 @@ const Reducer = (state = initialState, action) => {
       return { ...state, showAddPlaylist: !state.showAddPlaylist };
     case "SET_SHOW_TRACK_TITLE":
       return { ...state, storeTrackTitle: action.payload };
-      case "SET_STORE_GET_PLAYLIST":
-        return  {...state, storeGetPlaylist: action.payload};
+    case "SET_STORE_GET_PLAYLIST":
+      return { ...state, storeGetPlaylist: action.payload };
+    case "SET_IS_LOGIN":
+      return { ...state, isLogin: action.payload };
     default:
       return state;
   }

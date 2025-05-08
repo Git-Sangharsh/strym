@@ -409,9 +409,14 @@ audio {
 .like-section-title {
     text-align: start;
     padding: 1rem;
+    padding-left: 00px;
     font-size: 1rem;
     color: #11CD91;
     cursor: pointer;
+}
+
+.main-like-songs-paddiing{
+    padding: 1rem !important;
 }
 
 /* playllist  section */
@@ -429,12 +434,23 @@ audio {
 .playlist-section-div {
     background-color: #18181A;
     gap: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
     /* Adds space between grid items */
     border-radius: 3px;
     /* Optional: adds rounded corners */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     /* Optional: adds subtle shadow */
 }
+
+.trash-icon-white{
+    width: 1.55rem;
+
+    cursor: pointer;
+}
+
 
 /* Make the last item take full width if the number of items is odd */
 .playlist-section>div:nth-child(odd):last-child {

@@ -8,12 +8,13 @@ import nextIcon from "../assets/next.svg";
 import previousIcon from "../assets/previous.svg";
 import loopIcon from "../assets/loop.svg";
 import shuffleIcon from "../assets/shuffle.svg";
+import trashIcon from "../assets/trashwhite.svg";
 // import sortIcon from "../assets/sort.svg";
 import favoriteIcon from "../assets/favorite.svg";
 import fillIcon from "../assets/fill.svg";
 import addSvg from "../assets/add.svg";
 import { useDispatch, useSelector } from "react-redux";
-import {  toast } from "react-toastify";
+import { toast } from "react-toastify";
 
 const Product = () => {
   const dispatch = useDispatch();
@@ -34,7 +35,8 @@ const Product = () => {
   const [playingTrackSinger, setPlayingTrackSinger] = useState(null);
   const [activePlaylist, setActivePlaylist] = useState(null); // track active playlist
   const [selectedTrackId, setSelectedTrackId] = useState(null);
-  const isLogin = useSelector((state) => state.isLogin)
+  const isLogin = useSelector((state) => state.isLogin);
+  const [playlistTracks, setPlaylistTracks] = useState([]);
 
   const audioRefs = useRef([]);
   const pausedTimeRef = useRef({}); // Store paused time for each track
@@ -77,8 +79,6 @@ const Product = () => {
   // console.log("diaplay Data", displayData)
   // console.log("original Data", originalData)
 
-
-
   const getLikedSongs = async () => {
     try {
       const token = localStorage.getItem("google_token");
@@ -98,7 +98,7 @@ const Product = () => {
       );
 
       // console.log(response.data);
-      setlikeSongs(response.data.likedTracks)
+      setlikeSongs(response.data.likedTracks);
       // Do something with the data if needed
     } catch (err) {
       console.error("Error fetching liked tracks:", err);
@@ -109,29 +109,36 @@ const Product = () => {
     getLikedSongs();
   }, []);
 
-
   // Filter data based on search term and favorites toggle
   useEffect(() => {
-    let filtered = allTracks;
+    let baseTracks = activePlaylist ? playlistTracks : allTracks;
 
     if (searchTerm.trim() !== "") {
-      filtered = filtered.filter(
+      baseTracks = baseTracks.filter(
         (track) =>
           track.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           track.singer.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    const finalDisplayData = showFavorites ? likeSongs : filtered;
+    const finalDisplayData = showFavorites ? likeSongs : baseTracks;
     setDisplayData(finalDisplayData);
 
-    // 🛡️ If the currently selected track is no longer in the list, clear it
-    const stillExists = finalDisplayData.some(track => track._id === selectedTrackId);
+    const stillExists = finalDisplayData.some(
+      (track) => track._id === selectedTrackId
+    );
     if (!stillExists) {
       setSelectedTrackId(null);
     }
-  }, [searchTerm, showFavorites, likeSongs, allTracks, selectedTrackId]);
-
+  }, [
+    searchTerm,
+    showFavorites,
+    likeSongs,
+    allTracks,
+    selectedTrackId,
+    activePlaylist,
+    playlistTracks,
+  ]);
 
   // Function to stop all audio
   const stopAllAudio = () => {
@@ -358,65 +365,62 @@ const Product = () => {
     };
   }, []);
 
-// Usiig useCallback to memoize the handlePlaybackToggle function for play/pause toggle for the playback bar
-const handlePlaybackToggle = useCallback(() => {
-  if (playingIndex !== null) {
-    if (isPlaying) {
-      // Pause current audio
-      const audio = audioRefs.current[playingIndex];
-      if (audio) {
-        const trackId = displayData[playingIndex]?._id;
-        if (trackId) {
-          pausedTimeRef.current[trackId] = audio.currentTime;
+  // Usiig useCallback to memoize the handlePlaybackToggle function for play/pause toggle for the playback bar
+  const handlePlaybackToggle = useCallback(() => {
+    if (playingIndex !== null) {
+      if (isPlaying) {
+        // Pause current audio
+        const audio = audioRefs.current[playingIndex];
+        if (audio) {
+          const trackId = displayData[playingIndex]?._id;
+          if (trackId) {
+            pausedTimeRef.current[trackId] = audio.currentTime;
+          }
+          audio.pause();
+          setIsPlaying(false);
         }
-        audio.pause();
-        setIsPlaying(false);
-      }
-    } else {
-      // Resume current audio
-      const audio = audioRefs.current[playingIndex];
-      if (audio) {
-        audio.play().catch((error) => {
-          console.error("Error playing audio:", error);
-        });
-        setIsPlaying(true);
+      } else {
+        // Resume current audio
+        const audio = audioRefs.current[playingIndex];
+        if (audio) {
+          audio.play().catch((error) => {
+            console.error("Error playing audio:", error);
+          });
+          setIsPlaying(true);
+        }
       }
     }
-  }
-}, [playingIndex, isPlaying, displayData]);
+  }, [playingIndex, isPlaying, displayData]);
 
-useEffect(() => {
-  const handleKeyDown = (e) => {
-    if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
-      e.preventDefault(); // Prevent page scrolling on space press
-      handlePlaybackToggle();
-    }
-  };
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.code === "Space" && e.target.tagName !== "INPUT") {
+        e.preventDefault(); // Prevent page scrolling on space press
+        handlePlaybackToggle();
+      }
+    };
 
-  // Add event listener
-  document.addEventListener('keydown', handleKeyDown);
+    // Add event listener
+    document.addEventListener("keydown", handleKeyDown);
 
-  // Remove event listener on cleanup
-  return () => {
-    document.removeEventListener('keydown', handleKeyDown);
-  };
-}, [handlePlaybackToggle]);
+    // Remove event listener on cleanup
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handlePlaybackToggle]);
 
-  const currentTrack = displayData.find(track => track._id === selectedTrackId) || null;
-
+  const currentTrack =
+    displayData.find((track) => track._id === selectedTrackId) || null;
 
   // console.log(currentTrack._id)
   const isFavorite =
-  currentTrack &&
-  likeSongs.some(track => track._id === currentTrack._id) &&
-  allTracks.some(track => track._id === currentTrack._id);
-
+    currentTrack &&
+    likeSongs.some((track) => track._id === currentTrack._id) &&
+    allTracks.some((track) => track._id === currentTrack._id);
 
   // console.log(likeSongs)
   // console.log(allTracks)
   // console.log(currentTrack)
-
-
 
   const handleFavorite = async () => {
     try {
@@ -443,7 +447,6 @@ useEffect(() => {
       }
 
       toast.success(response?.data?.message || "Liked/unliked successfully");
-
     } catch (error) {
       console.error("Error in handleFavorite:", error);
       // toast.error("Something went wrong!");
@@ -467,43 +470,43 @@ useEffect(() => {
     dispatch({ type: "TOGGLE_ADD_PLAYLIST" });
   };
 
-  useEffect(() => {
-    const fetchPlaylists = async () => {
-      try {
-        const token = localStorage.getItem("google_token");
+  const fetchPlaylists = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("google_token");
 
-        const response = await axios.post(
-          `${process.env.REACT_APP_BACKEND_API}/get-playlist`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        // console.log(response.data)
-        dispatch({
-          type: "SET_STORE_GET_PLAYLIST",
-          payload: response.data.playlists,
-        });
-      } catch (error) {
-        console.error("Error fetching playlists:", error);
-      }
-    };
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_API}/get-playlist`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    fetchPlaylists();
-    if (isLogin) {
-      fetchPlaylists(); // only run if user is logged in
+      dispatch({
+        type: "SET_STORE_GET_PLAYLIST",
+        payload: response.data.playlists,
+      });
+    } catch (error) {
+      console.error("Error fetching playlists:", error);
     }
-  }, [dispatch, isLogin]);
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (isLogin) {
+      fetchPlaylists();
+    } else {
+      fetchPlaylists();
+    }
+  }, [dispatch, isLogin, fetchPlaylists]);
 
   const storeGetPlaylist = useSelector((state) => state.storeGetPlaylist);
 
   const handlePlaylistTrack = async (playlistName) => {
     if (activePlaylist === playlistName) {
-      // If clicked again on same playlist, toggle back to all tracks
-      setDisplayData(allTracks);
       setActivePlaylist(null);
+      setPlaylistTracks(allTracks); // Clear playlist tracks
       return;
     }
 
@@ -522,16 +525,48 @@ useEffect(() => {
 
       setDisplayData(response.data.playlist.tracks);
       setActivePlaylist(playlistName); // Set the current active playlist
+      setPlaylistTracks(response.data.playlist.tracks);
     } catch (err) {
       console.log(err);
     }
   };
 
+  // delete specific play list
+  const handleDeletePlaylist = async (playlistName) => {
+    const token = localStorage.getItem("google_token");
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_API}/delete-playlist`,
+        { playlistName },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        toast.success("Playlist deleted successfully");
+        fetchPlaylists();
+        setDisplayData(allTracks);
+      } else {
+        toast.error("Failed to delete playlist");
+      }
+    } catch (error) {
+      console.error("Delete playlist error:", error);
+      const message =
+        error.response?.data?.error || "Something went wrong while deleting";
+      toast.error(message);
+    }
+  };
+
+  // console.log(displayData);
   // console.log(currentTrack?.title);
   // console.log("displayData", displayData);
   // console.log("playingIndex", playingIndex);
   // console.log("currentTrack", playingTrackTitle);
   // console.log("showFavorites", showFavorites);
+
   return (
     <div className="product-container">
       <div className="product-sort">
@@ -568,7 +603,7 @@ useEffect(() => {
 
       <div className="like-section" onClick={handleShowFavorites}>
         <h1
-          className={`like-section-title ${
+          className={`like-section-title main-like-songs-paddiing ${
             showFavorites ? "show-all" : "clr-white"
           }`}
         >
@@ -593,6 +628,12 @@ useEffect(() => {
             >
               {i.name}
             </h1>
+            <img
+              className="trash-icon-white"
+              src={trashIcon}
+              alt=""
+              onClick={() => handleDeletePlaylist(i.name)}
+            />
           </div>
         ))}
       </div>
@@ -622,7 +663,8 @@ useEffect(() => {
                   onClick={() => {
                     handlePlay(index, item.title, item.singer);
                     setSelectedTrackId(item._id);
-                  }}                />
+                  }}
+                />
                 <AnimatePresence>
                   <motion.div
                     className={`${
@@ -799,26 +841,31 @@ useEffect(() => {
               onClick={handleLoopToggle}
             />
 
-              <AnimatePresence mode="wait">
-  <motion.img
-    onClick={handleFavorite}
-    key={currentTrack === null ? "default" : isFavorite ? "filled" : "outline"}
-    src={
-      currentTrack === null
-        ? favoriteIcon
-        : isFavorite
-        ? fillIcon
-        : favoriteIcon
-    }
-    alt="Favorite"
-    className="favorite-icon"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    transition={{ duration: 0.3 }}
-  />
-</AnimatePresence>
-
+            <AnimatePresence mode="wait">
+              <motion.img
+                onClick={handleFavorite}
+                key={
+                  currentTrack === null
+                    ? "default"
+                    : isFavorite
+                    ? "filled"
+                    : "outline"
+                }
+                src={
+                  currentTrack === null
+                    ? favoriteIcon
+                    : isFavorite
+                    ? fillIcon
+                    : favoriteIcon
+                }
+                alt="Favorite"
+                className="favorite-icon"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              />
+            </AnimatePresence>
 
             <img
               src={addSvg}
@@ -855,7 +902,6 @@ useEffect(() => {
           </div>
         </motion.div>
       </AnimatePresence>
-
     </div>
   );
 };

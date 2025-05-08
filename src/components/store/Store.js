@@ -10,6 +10,7 @@ const initialState = {
   storeTrackTitle: null,
   storeGetPlaylist: [],
   isLogin: false,
+  
 };
 
 const Reducer = (state = initialState, action) => {

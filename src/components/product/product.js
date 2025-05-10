@@ -31,6 +31,7 @@ const Product = () => {
   const [likeSongs, setlikeSongs] = useState([]);
   const [displayData, setDisplayData] = useState([]);
   const [allTracks, setAllTracks] = useState([]);
+  const [allTracksActive, setAllTracksActive] = useState(true);
   const [playingTrackTitle, setPlayingTrackTitle] = useState(null);
   const [playingTrackSinger, setPlayingTrackSinger] = useState(null);
   const [activePlaylist, setActivePlaylist] = useState(null); // track active playlist
@@ -45,6 +46,7 @@ const Product = () => {
   useEffect(() => {
     shuffleModeRef.current = shuffleMode;
   }, [shuffleMode]);
+
 
   useEffect(() => {
     const fetchTracks = async () => {
@@ -455,6 +457,7 @@ const Product = () => {
 
   const handleShowFavorites = () => {
     setShowFavorites(!showFavorites);
+    setActivePlaylist(null)
   };
 
   const handlePlaylistModal = () => {
@@ -496,19 +499,17 @@ const Product = () => {
   useEffect(() => {
     if (isLogin) {
       fetchPlaylists();
-    } else {
-      fetchPlaylists();
     }
   }, [dispatch, isLogin, fetchPlaylists]);
 
   const storeGetPlaylist = useSelector((state) => state.storeGetPlaylist);
 
   const handlePlaylistTrack = async (playlistName) => {
-    if (activePlaylist === playlistName) {
-      setActivePlaylist(null);
-      setPlaylistTracks(allTracks); // Clear playlist tracks
-      return;
-    }
+    // if (activePlaylist === playlistName) {
+    //   setActivePlaylist(null);
+    //   setPlaylistTracks(allTracks); // Clear playlist tracks
+    //   return;
+    // }
 
     try {
       const token = localStorage.getItem("google_token");
@@ -560,6 +561,27 @@ const Product = () => {
     }
   };
 
+  const handleAllTracks = () => {
+    setDisplayData(allTracks)
+    setAllTracksActive(true)
+    setActivePlaylist(null)
+    setShowFavorites(false)
+  }
+
+  useEffect(() =>  {
+    if(showFavorites &&  activePlaylist){
+      setShowFavorites(false)
+      setAllTracksActive(false)
+    } if(activePlaylist){
+      setAllTracksActive(false)
+    } if(showFavorites){
+      setActivePlaylist(null)
+      setAllTracksActive(false)
+    }
+  },[activePlaylist, showFavorites,])
+
+  // console.log(allTracks)
+
   // console.log(displayData);
   // console.log(currentTrack?.title);
   // console.log("displayData", displayData);
@@ -594,12 +616,12 @@ const Product = () => {
           onChange={handleSearchChange}
         />
       </div>
-      {/* <div className="like-section">
 
-      <h1 className="like-section-title">
+      <div className="like-section" onClick={handleAllTracks}>
+        <h1 className={` ${allTracksActive ? "all-track-title-active" : "all-track-title"}`}>
           All Tracks
         </h1>
-      </div> */}
+      </div>
 
       <div className="like-section" onClick={handleShowFavorites}>
         <h1
@@ -629,7 +651,7 @@ const Product = () => {
               {i.name}
             </h1>
             <img
-              className="trash-icon-white"
+              className="trash-icon-white playback-play-icon  "
               src={trashIcon}
               alt=""
               onClick={() => handleDeletePlaylist(i.name)}
@@ -870,7 +892,7 @@ const Product = () => {
             <img
               src={addSvg}
               alt=""
-              className="playlist-add-icon"
+              className="playlist-add-icon playback-play-icon"
               onClick={() => {
                 handleAddTrackToPlaylist(playingTrackTitle);
                 handleAddPlaylist();

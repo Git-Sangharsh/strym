@@ -263,6 +263,13 @@ audio {
     cursor: pointer;
 }
 
+.trash-icon-white{
+    width: 40px !important;
+    height: 40px !important;
+    cursor: pointer;
+}
+
+
 .next-previous-icon {
     width: 30px !important;
     height: 30px !important;
@@ -323,7 +330,7 @@ audio {
 
 .product-sort {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
     gap: 10px;
     width: 93%;
@@ -415,6 +422,21 @@ audio {
     cursor: pointer;
 }
 
+.all-track-title{
+    text-align: start;
+    padding: 1rem;
+    font-size: 1rem;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.all-track-title-active{
+    color: #11CD91;
+    text-align: start;
+    padding: 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+}
 .main-like-songs-paddiing{
     padding: 1rem !important;
 }
@@ -445,11 +467,6 @@ audio {
     /* Optional: adds subtle shadow */
 }
 
-.trash-icon-white{
-    width: 1.55rem;
-
-    cursor: pointer;
-}
 
 
 /* Make the last item take full width if the number of items is odd */

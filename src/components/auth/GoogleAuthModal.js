@@ -81,8 +81,13 @@ const GoogleAuthModal = () => {
           email: decoded.email,
         },
       });
+      dispatch({
+        type: "SET_IS_LOGIN",
+        payload: true,
+      });
     }
   }, [dispatch]);
+
 
   // const hello = localStorage.getItem("google_token");
   // const decodedHello = jwtDecode(hello)

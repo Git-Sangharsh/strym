@@ -10,7 +10,6 @@ const initialState = {
   storeTrackTitle: null,
   storeGetPlaylist: [],
   isLogin: false,
-  
 };
 
 const Reducer = (state = initialState, action) => {
@@ -25,7 +24,8 @@ const Reducer = (state = initialState, action) => {
     case "SET_USER":
       return { ...state, userState: action.payload };
     case "LOGOUT_USER":
-      return { ...state, userState: null };
+      return { ...state, userState: null, isLogin: false };
+
     case "SET_PLAYLIST_MODAL":
       return { ...state, playlistState: !state.playlistState };
     case "TOGGLE_ADD_PLAYLIST":

@@ -9,6 +9,7 @@ import previousIcon from "../assets/previous.svg";
 import loopIcon from "../assets/loop.svg";
 import shuffleIcon from "../assets/shuffle.svg";
 import trashIcon from "../assets/trashwhite.svg";
+import removeIcon from "../assets/remove.svg";
 // import sortIcon from "../assets/sort.svg";
 import favoriteIcon from "../assets/favorite.svg";
 import fillIcon from "../assets/fill.svg";
@@ -34,10 +35,12 @@ const Product = () => {
   const [allTracksActive, setAllTracksActive] = useState(true);
   const [playingTrackTitle, setPlayingTrackTitle] = useState(null);
   const [playingTrackSinger, setPlayingTrackSinger] = useState(null);
+  const [playingTrackId, setPlayingTrackId] = useState(null);
   const [activePlaylist, setActivePlaylist] = useState(null); // track active playlist
   const [selectedTrackId, setSelectedTrackId] = useState(null);
   const isLogin = useSelector((state) => state.isLogin);
   const [playlistTracks, setPlaylistTracks] = useState([]);
+  const [removeTrack, setRemoveTrack] = useState(false);
 
   const audioRefs = useRef([]);
   const pausedTimeRef = useRef({}); // Store paused time for each track
@@ -46,7 +49,6 @@ const Product = () => {
   useEffect(() => {
     shuffleModeRef.current = shuffleMode;
   }, [shuffleMode]);
-
 
   useEffect(() => {
     const fetchTracks = async () => {
@@ -202,13 +204,14 @@ const Product = () => {
     }
   };
 
-  const handlePlay = (index, title, singer) => {
+  const handlePlay = (index, title, singer, itemId) => {
     const audioSrc = displayData[index].audio;
     const trackId = displayData[index].title;
     // console.log("index", index);
     // console.log("title", title);
     setPlayingTrackTitle(title);
     setPlayingTrackSinger(singer);
+    setPlayingTrackId(itemId)
 
     // console.log("trackId", trackId)
     // Define handlers as named functions
@@ -231,6 +234,7 @@ const Product = () => {
         // Update the title and singer before switching
         setPlayingTrackTitle(nextTrack.title);
         setPlayingTrackSinger(nextTrack.singer);
+        setPlayingTrackId(itemId)
 
         handlePlay(nextIndex, nextTrack.title, nextTrack.singer);
       }
@@ -457,7 +461,7 @@ const Product = () => {
 
   const handleShowFavorites = () => {
     setShowFavorites(!showFavorites);
-    setActivePlaylist(null)
+    setActivePlaylist(null);
   };
 
   const handlePlaylistModal = () => {
@@ -562,26 +566,68 @@ const Product = () => {
   };
 
   const handleAllTracks = () => {
-    setDisplayData(allTracks)
-    setAllTracksActive(true)
-    setActivePlaylist(null)
-    setShowFavorites(false)
+    setDisplayData(allTracks);
+    setAllTracksActive(true);
+    setActivePlaylist(null);
+    setShowFavorites(false);
+    setRemoveTrack(false);
+  };
+
+  useEffect(() => {
+    if (showFavorites && activePlaylist) {
+      setShowFavorites(false);
+      setAllTracksActive(false);
+    }
+    if (activePlaylist) {
+      setAllTracksActive(false);
+    }
+    if (showFavorites) {
+      setActivePlaylist(null);
+      setAllTracksActive(false);
+      setRemoveTrack(false)
+    }
+  }, [activePlaylist, showFavorites]);
+
+  useEffect(() => {
+    if (activePlaylist && playingTrackTitle) {
+      const isTrackInPlaylist = displayData.some(
+        (track) => track.title === playingTrackTitle
+      );
+          isTrackInPlaylist ? setRemoveTrack(true) : setRemoveTrack(false)
+
+    }
+  }, [activePlaylist, playingTrackTitle, displayData]);
+
+  const handlRemoveFromPlaylist = async (trackId) => {
+    try {
+      const token = localStorage.getItem("google_token");
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_API}/remove-from-playlist`,
+        {playlistName : activePlaylist,
+          trackId : playingTrackId
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log(response.data)
+
+      if(response.status === 200){
+        toast.success(response.data.message);
+        handlePlaylistTrack(activePlaylist)
+      }
+    }catch(err) {
+      console.log(err)
+    }
   }
 
-  useEffect(() =>  {
-    if(showFavorites &&  activePlaylist){
-      setShowFavorites(false)
-      setAllTracksActive(false)
-    } if(activePlaylist){
-      setAllTracksActive(false)
-    } if(showFavorites){
-      setActivePlaylist(null)
-      setAllTracksActive(false)
-    }
-  },[activePlaylist, showFavorites,])
-
+  // console.log(removeTrack)
+  // console.log(activePlaylist)
   // console.log(allTracks)
-
   // console.log(displayData);
   // console.log(currentTrack?.title);
   // console.log("displayData", displayData);
@@ -618,7 +664,11 @@ const Product = () => {
       </div>
 
       <div className="like-section" onClick={handleAllTracks}>
-        <h1 className={` ${allTracksActive ? "all-track-title-active" : "all-track-title"}`}>
+        <h1
+          className={` ${
+            allTracksActive ? "all-track-title-active" : "all-track-title"
+          }`}
+        >
           All Tracks
         </h1>
       </div>
@@ -683,7 +733,7 @@ const Product = () => {
                   alt={item.title}
                   className="product-image"
                   onClick={() => {
-                    handlePlay(index, item.title, item.singer);
+                    handlePlay(index, item.title, item.singer, item._id);
                     setSelectedTrackId(item._id);
                   }}
                 />
@@ -712,7 +762,7 @@ const Product = () => {
                           alt="Pause"
                           className="play-button play-button-visible"
                           onClick={() =>
-                            handlePlay(index, item.title, item.singer)
+                            handlePlay(index, item.title, item.singer, item._id)
                           }
                         />
                       ) : (
@@ -721,7 +771,7 @@ const Product = () => {
                           alt="Play"
                           className="play-button play-button-visible"
                           onClick={() =>
-                            handlePlay(index, item.title, item.singer)
+                            handlePlay(index, item.title, item.singer, item._id)
                           }
                         />
                       )
@@ -889,15 +939,26 @@ const Product = () => {
               />
             </AnimatePresence>
 
-            <img
-              src={addSvg}
-              alt=""
-              className="playlist-add-icon playback-play-icon"
-              onClick={() => {
-                handleAddTrackToPlaylist(playingTrackTitle);
-                handleAddPlaylist();
-              }}
-            />
+            {removeTrack ? (
+              <img
+                src={removeIcon}
+                alt=""
+                className="playlist-add-icon"
+                onClick={() => {
+                  handlRemoveFromPlaylist()
+                }}
+              />
+            ) : (
+              <img
+                src={addSvg}
+                alt=""
+                className="playlist-add-icon"
+                onClick={() => {
+                  handleAddTrackToPlaylist(playingTrackTitle);
+                  handleAddPlaylist();
+                }}
+              />
+            )}
           </div>
           {/* Track  Title and Singer   */}
           {isPlayback && playingTrackTitle && (

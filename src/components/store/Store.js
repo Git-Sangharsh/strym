@@ -10,6 +10,8 @@ const initialState = {
   storeTrackTitle: null,
   storeGetPlaylist: [],
   isLogin: false,
+  roomStatus: false,
+  activeUsers: []
 };
 
 const Reducer = (state = initialState, action) => {
@@ -36,6 +38,10 @@ const Reducer = (state = initialState, action) => {
       return { ...state, storeGetPlaylist: action.payload };
     case "SET_IS_LOGIN":
       return { ...state, isLogin: action.payload };
+    case "SET_ROOM_STATUS":
+      return { ...state, roomStatus: action.payload };
+    case "SET_ACTIVE_USERS":
+      return {...state,  activeUsers: action.payload}
     default:
       return state;
   }

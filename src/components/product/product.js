@@ -16,9 +16,14 @@ import fillIcon from "../assets/fill.svg";
 import addSvg from "../assets/add.svg";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { io } from "socket.io-client";
+import { jwtDecode } from "jwt-decode";
+import Activeusers from "../activeusers/Activeusers";
 
 const Product = () => {
   const dispatch = useDispatch();
+
+  // State variables
   const [playingIndex, setPlayingIndex] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayback, setIsPlayback] = useState(false);
@@ -38,50 +43,69 @@ const Product = () => {
   const [playingTrackId, setPlayingTrackId] = useState(null);
   const [activePlaylist, setActivePlaylist] = useState(null); // track active playlist
   const [selectedTrackId, setSelectedTrackId] = useState(null);
-  const isLogin = useSelector((state) => state.isLogin);
   const [playlistTracks, setPlaylistTracks] = useState([]);
   const [removeTrack, setRemoveTrack] = useState(false);
+  const [currentUserEmail, setCurrentUserEmail] = useState(null);
+  const [adminEmail, setAdminEmail] = useState(null);
+  // const [roomId, setRoomId] = useState("123"); // room id input from user or set programmatically
+  const roomId = "123";
+  const socketRef = useRef(null);
 
+  // Redux state
+  const isLogin = useSelector((state) => state.isLogin);
+  const storeGetPlaylist = useSelector((state) => state.storeGetPlaylist);
+  const roomStatus = useSelector((state) => state.roomStatus);
+  // Refs
   const audioRefs = useRef([]);
   const pausedTimeRef = useRef({}); // Store paused time for each track
   const shuffleModeRef = useRef(shuffleMode);
 
-  useEffect(() => {
-    shuffleModeRef.current = shuffleMode;
-  }, [shuffleMode]);
+  const isUserAdmin = currentUserEmail === adminEmail;
 
-  useEffect(() => {
-    const fetchTracks = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_API}/tracks`
-        );
+  // Utility functions
+  const formatTime = (time) => {
+    if (!time || isNaN(time)) return "0:00";
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+  };
 
-        // Sort the tracks alphabetically by title
-        const sortedTracks = response.data.sort((a, b) =>
-          a.title.localeCompare(b.title)
-        );
-
-        // setApi(sortedTracks);
-        // setOriginalData(sortedTracks); // Save sorted original data
-        setDisplayData(sortedTracks);
-        setAllTracks(sortedTracks); // full copy
-      } catch (err) {
-        console.error("Error fetching tracks", err);
+  const stopAllAudio = () => {
+    audioRefs.current.forEach((audio, index) => {
+      if (audio) {
+        // Store the current time before stopping
+        pausedTimeRef.current[index] = audio.currentTime;
+        audio.pause();
       }
-    };
+    });
+    setIsPlaying(false);
+    setPlayingIndex(null);
+    setIsPlayback(false);
+  };
 
-    fetchTracks();
+  // API calls
+  const fetchPlaylists = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("google_token");
 
-    // Cleanup function to stop all audio when component unmounts
-    return () => {
-      stopAllAudio();
-    };
-  }, []);
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_API}/get-playlist`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-  // console.log("api Data", api)
-  // console.log("diaplay Data", displayData)
-  // console.log("original Data", originalData)
+      dispatch({
+        type: "SET_STORE_GET_PLAYLIST",
+        payload: response.data.playlists,
+      });
+    } catch (error) {
+      console.error("Error fetching playlists:", error);
+    }
+  }, [dispatch]);
 
   const getLikedSongs = async () => {
     try {
@@ -109,68 +133,7 @@ const Product = () => {
     }
   };
 
-  useEffect(() => {
-    getLikedSongs();
-  }, []);
-
-  // Filter data based on search term and favorites toggle
-  useEffect(() => {
-    let baseTracks = activePlaylist ? playlistTracks : allTracks;
-
-    if (searchTerm.trim() !== "") {
-      baseTracks = baseTracks.filter(
-        (track) =>
-          track.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          track.singer.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    const finalDisplayData = showFavorites ? likeSongs : baseTracks;
-    setDisplayData(finalDisplayData);
-
-    const stillExists = finalDisplayData.some(
-      (track) => track._id === selectedTrackId
-    );
-    if (!stillExists) {
-      setSelectedTrackId(null);
-    }
-  }, [
-    searchTerm,
-    showFavorites,
-    likeSongs,
-    allTracks,
-    selectedTrackId,
-    activePlaylist,
-    playlistTracks,
-  ]);
-
-  // Function to stop all audio
-  const stopAllAudio = () => {
-    audioRefs.current.forEach((audio, index) => {
-      if (audio) {
-        // Store the current time before stopping
-        pausedTimeRef.current[index] = audio.currentTime;
-        audio.pause();
-      }
-    });
-    setIsPlaying(false);
-    setPlayingIndex(null);
-    setIsPlayback(false);
-  };
-
-  const formatTime = (time) => {
-    if (!time || isNaN(time)) return "0:00";
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-  };
-
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  // Play random song from currently displayed tracks
+  // Audio control functions
   const playRandomSong = (currentIndex) => {
     if (displayData.length <= 1) return;
 
@@ -211,7 +174,24 @@ const Product = () => {
     // console.log("title", title);
     setPlayingTrackTitle(title);
     setPlayingTrackSinger(singer);
-    setPlayingTrackId(itemId)
+    setPlayingTrackId(itemId);
+
+    if (isUserAdmin) {
+      const startTime = Date.now() + 500; // slight delay to allow sync
+
+      socketRef.current?.emit("play-track", {
+        roomId,
+        track: {
+          title,
+          artist: singer,
+          url: audioSrc,
+          itemId,
+          index, // needed to track which audio
+        },
+        startTime,
+        resumeTime: pausedTimeRef.current[trackId] || 0,
+      });
+    }
 
     // console.log("trackId", trackId)
     // Define handlers as named functions
@@ -234,7 +214,7 @@ const Product = () => {
         // Update the title and singer before switching
         setPlayingTrackTitle(nextTrack.title);
         setPlayingTrackSinger(nextTrack.singer);
-        setPlayingTrackId(itemId)
+        setPlayingTrackId(itemId);
 
         handlePlay(nextIndex, nextTrack.title, nextTrack.singer);
       }
@@ -296,6 +276,50 @@ const Product = () => {
     setIsPlayback(true);
   };
 
+  const handlePlaybackToggle = useCallback(() => {
+    if (playingIndex !== null) {
+      const audio = audioRefs.current[playingIndex];
+      const trackId = displayData[playingIndex]?._id;
+      const currentTrack = displayData[playingIndex];
+
+      if (isPlaying) {
+        if (audio) {
+          pausedTimeRef.current[trackId] = audio.currentTime;
+          audio.pause();
+          setIsPlaying(false);
+
+          // Only emit if user is admin
+          if (isUserAdmin) {
+            socketRef.current?.emit("pause-track", {
+              roomId,
+              index: playingIndex,
+              currentTime: audio.currentTime,
+              itemId: trackId,
+            });
+          }
+        }
+      } else {
+        if (audio) {
+          // Resume playback locally
+          audio.play().catch(console.error);
+          setIsPlaying(true);
+
+          // Only emit if user is admin
+          if (isUserAdmin) {
+            socketRef.current?.emit("resume-track", {
+              roomId,
+              track: {
+                ...currentTrack,
+                artist: currentTrack.singer, // Ensure artist field is set
+              },
+              resumeTime: audio.currentTime,
+            });
+          }
+        }
+      }
+    }
+  }, [playingIndex, isPlaying, displayData, roomId, isUserAdmin]);
+
   const handleSeek = (e) => {
     const newTime = e.target.value;
     if (playingIndex !== null && audioRefs.current[playingIndex]) {
@@ -352,81 +376,10 @@ const Product = () => {
     setShuffleMode(!shuffleMode);
   };
 
-  useEffect(() => {
-    // Update loop status for current audio when looping state changes
-    if (playingIndex !== null && audioRefs.current[playingIndex]) {
-      audioRefs.current[playingIndex].loop = isLooping;
-    }
-  }, [isLooping, playingIndex]); // Added playingIndex to dependency array
-
-  useEffect(() => {
-    const handleRouteChange = () => {
-      stopAllAudio();
-    };
-
-    window.addEventListener("popstate", handleRouteChange);
-
-    return () => {
-      window.removeEventListener("popstate", handleRouteChange);
-    };
-  }, []);
-
-  // Usiig useCallback to memoize the handlePlaybackToggle function for play/pause toggle for the playback bar
-  const handlePlaybackToggle = useCallback(() => {
-    if (playingIndex !== null) {
-      if (isPlaying) {
-        // Pause current audio
-        const audio = audioRefs.current[playingIndex];
-        if (audio) {
-          const trackId = displayData[playingIndex]?._id;
-          if (trackId) {
-            pausedTimeRef.current[trackId] = audio.currentTime;
-          }
-          audio.pause();
-          setIsPlaying(false);
-        }
-      } else {
-        // Resume current audio
-        const audio = audioRefs.current[playingIndex];
-        if (audio) {
-          audio.play().catch((error) => {
-            console.error("Error playing audio:", error);
-          });
-          setIsPlaying(true);
-        }
-      }
-    }
-  }, [playingIndex, isPlaying, displayData]);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.code === "Space" && e.target.tagName !== "INPUT") {
-        e.preventDefault(); // Prevent page scrolling on space press
-        handlePlaybackToggle();
-      }
-    };
-
-    // Add event listener
-    document.addEventListener("keydown", handleKeyDown);
-
-    // Remove event listener on cleanup
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handlePlaybackToggle]);
-
-  const currentTrack =
-    displayData.find((track) => track._id === selectedTrackId) || null;
-
-  // console.log(currentTrack._id)
-  const isFavorite =
-    currentTrack &&
-    likeSongs.some((track) => track._id === currentTrack._id) &&
-    allTracks.some((track) => track._id === currentTrack._id);
-
-  // console.log(likeSongs)
-  // console.log(allTracks)
-  // console.log(currentTrack)
+  // Event handlers
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
 
   const handleFavorite = async () => {
     try {
@@ -464,49 +417,27 @@ const Product = () => {
     setActivePlaylist(null);
   };
 
+  const handleAllTracks = () => {
+    setDisplayData(allTracks);
+    setAllTracksActive(true);
+    setActivePlaylist(null);
+    setShowFavorites(false);
+    setRemoveTrack(false);
+  };
+
+  // Playlist functions
   const handlePlaylistModal = () => {
     dispatch({ type: "SET_PLAYLIST_MODAL" });
   };
+
   const handleAddTrackToPlaylist = (title) => {
     // console.log("title is", title);
-
     dispatch({ type: "SET_SHOW_TRACK_TITLE", payload: title });
   };
 
   const handleAddPlaylist = () => {
     dispatch({ type: "TOGGLE_ADD_PLAYLIST" });
   };
-
-  const fetchPlaylists = useCallback(async () => {
-    try {
-      const token = localStorage.getItem("google_token");
-
-      const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_API}/get-playlist`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      dispatch({
-        type: "SET_STORE_GET_PLAYLIST",
-        payload: response.data.playlists,
-      });
-    } catch (error) {
-      console.error("Error fetching playlists:", error);
-    }
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (isLogin) {
-      fetchPlaylists();
-    }
-  }, [dispatch, isLogin, fetchPlaylists]);
-
-  const storeGetPlaylist = useSelector((state) => state.storeGetPlaylist);
 
   const handlePlaylistTrack = async (playlistName) => {
     // if (activePlaylist === playlistName) {
@@ -536,7 +467,6 @@ const Product = () => {
     }
   };
 
-  // delete specific play list
   const handleDeletePlaylist = async (playlistName) => {
     const token = localStorage.getItem("google_token");
     try {
@@ -565,13 +495,381 @@ const Product = () => {
     }
   };
 
-  const handleAllTracks = () => {
-    setDisplayData(allTracks);
-    setAllTracksActive(true);
-    setActivePlaylist(null);
-    setShowFavorites(false);
-    setRemoveTrack(false);
+  const handlRemoveFromPlaylist = async (trackId) => {
+    try {
+      const token = localStorage.getItem("google_token");
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_API}/remove-from-playlist`,
+        { playlistName: activePlaylist, trackId: playingTrackId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log(response.data);
+
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        handlePlaylistTrack(activePlaylist);
+      }
+    } catch (err) {
+      console.log(err);
+    }
   };
+
+  const handleRoomStatus = useCallback(() => {
+    dispatch({ type: "SET_ROOM_STATUS", payload: !roomStatus });
+  }, [dispatch, roomStatus]);
+
+  // Email From token
+  const getUserEmailFromToken = () => {
+    const token = localStorage.getItem("google_token");
+    if (!token) return null;
+    try {
+      const decoded = jwtDecode(token);
+      return decoded.email;
+    } catch {
+      return null;
+    }
+  };
+
+  // Set current user email on mount
+  useEffect(() => {
+    const email = getUserEmailFromToken();
+    if (email) setCurrentUserEmail(email);
+  }, []);
+
+  // Socket functions
+  const handleCreateRoom = () => {
+    const email = getUserEmailFromToken();
+    if (!email || !roomId) return;
+
+    // Initialize socket connection if not exists
+    if (!socketRef.current) {
+      socketRef.current = io("http://localhost:3000");
+    }
+
+    socketRef.current.emit("create-room", {
+      roomId,
+      userEmail: email,
+    });
+
+    socketRef.current.on(
+      "room-create-status",
+      ({ success, admin, members, message }) => {
+        if (success) {
+          setAdminEmail(admin);
+          console.log("✅ Room created with admin:", admin);
+          console.log("👥 Members:", members);
+          const updatedActiveUsers = Array.from(new Set([admin, ...members]));
+
+          // Dispatch to update active users in state
+          dispatch({ type: "SET_ACTIVE_USERS", payload: updatedActiveUsers });
+        } else {
+          console.error("❌ Failed to create room:", message);
+        }
+      }
+    );
+  };
+
+  const handleJoinRoom = () => {
+    const email = getUserEmailFromToken();
+    if (!email || !roomId) return;
+
+    if (!socketRef.current) {
+      socketRef.current = io("http://localhost:3000");
+    }
+
+    socketRef.current.emit("join-room", {
+      roomId,
+      userEmail: email,
+    });
+
+    socketRef.current.on(
+      "room-join-status",
+      ({ success, admin, members, message }) => {
+        if (success) {
+          setAdminEmail(admin);
+          console.log("👑 Admin is:", admin);
+          console.log("👥 Members:", members);
+        } else {
+          console.error("❌ Failed to join room:", message);
+        }
+      }
+    );
+
+    socketRef.current.on("user-joined", ({ userEmail, membersOfRoom }) => {
+      console.log("👤 User joined:", userEmail);
+      console.log("membersOfRoom ", membersOfRoom);
+      // const updatedActiveUsers = Array.from(new Set([admin, ...members]));
+
+      // Dispatch to update active users in state
+      dispatch({ type: "SET_ACTIVE_USERS", payload: membersOfRoom });
+    });
+
+    socketRef.current.on(
+      "play-track",
+      ({ track, startTime, resumeTime = 0 }) => {
+        const { url, itemId, index } = track;
+
+        // Pause previous audio if any
+        const prevAudio = audioRefs.current[index];
+        if (prevAudio) {
+          prevAudio.pause();
+        }
+
+        const audio = new Audio(url);
+        audio.loop = isLooping;
+
+        audioRefs.current[index] = audio;
+        pausedTimeRef.current[itemId] = resumeTime;
+
+        audio.currentTime = resumeTime;
+
+        const delay = startTime - Date.now();
+        if (delay > 0) {
+          setTimeout(() => {
+            audio.play().catch((e) => console.error("Play error:", e));
+          }, delay);
+        } else {
+          audio.play().catch((e) => console.error("Play error:", e));
+        }
+
+        setPlayingIndex(index);
+        setPlayingTrackTitle(track.title);
+        setPlayingTrackSinger(track.artist);
+        setIsPlaying(true);
+      }
+    );
+
+    // Add pause-track listener here:
+    socketRef.current.on("pause-track", ({ index, currentTime, itemId }) => {
+      const audio = audioRefs.current[index];
+      if (!audio) return;
+
+      pausedTimeRef.current[itemId] = currentTime;
+      audio.currentTime = currentTime;
+      audio.pause();
+
+      setIsPlaying(false);
+    });
+
+    // Add the missing resume-track listener
+    socketRef.current.on("resume-track", ({ track, resumeTime }) => {
+      console.log("🔄 Resume track received:", track.title, "at", resumeTime);
+
+      // Find the track in displayData to get the correct index
+      const trackIndex = displayData.findIndex(
+        (t) => t._id === track._id || t.title === track.title
+      );
+
+      if (trackIndex === -1) {
+        console.error("Track not found in displayData");
+        return;
+      }
+
+      const audio = audioRefs.current[trackIndex];
+      if (!audio) {
+        console.error("Audio ref not found for track");
+        return;
+      }
+
+      // Set the resume time and play
+      audio.currentTime = resumeTime;
+      audio.play().catch((e) => console.error("Resume play error:", e));
+
+      // Update UI state
+      setPlayingIndex(trackIndex);
+      setPlayingTrackTitle(track.title);
+      setPlayingTrackSinger(track.artist || track.singer);
+      setPlayingTrackId(track._id || track.itemId);
+      setIsPlaying(true);
+      setCurrentTime(resumeTime);
+    });
+  };
+
+  // roomStatus
+  const closeRoomStatus = () => {
+    dispatch({ type: "SET_ROOM_STATUS", payload: false });
+  };
+
+  const activeUsers = useSelector((state) => state.activeUsers);
+
+  // socket users log
+  useEffect(() => {
+    if (!socketRef.current) return;
+    const socket = socketRef.current;
+
+    socket.on("user-joined", ({ userEmail, membersOfRoom }) => {
+      // Only log if it's not the current user joining
+      dispatch({ type: "SET_ACTIVE_USERS", payload: membersOfRoom });
+
+      if (userEmail !== currentUserEmail) {
+        console.log("✅ New user joined the room:", userEmail);
+
+        // Additional log for admin context
+        if (adminEmail === currentUserEmail) {
+          console.log("👑 [ADMIN VIEW] User joined your room:", userEmail);
+        }
+      }
+    });
+
+    socket.on("user-left", ({ userEmail, members, admin }) => {
+      // Only log if it's not the current user leaving
+      if (userEmail !== currentUserEmail) {
+        const removeLeftUser = activeUsers.filter(
+          (email) => email !== userEmail
+        );
+
+        dispatch({ type: "SET_ACTIVE_USERS", payload: removeLeftUser });
+
+        console.log("❌ User left the room:", userEmail);
+        console.log("👥 Remaining members:", members);
+
+        // Log admin changes
+        if (admin !== adminEmail) {
+          console.log("👑 New admin:", admin);
+        }
+
+        // Additional log for admin context
+        if (adminEmail === currentUserEmail) {
+          console.log("👑 [ADMIN VIEW] User left your room:", userEmail);
+        }
+      }
+    });
+
+    return () => {
+      socket.off("user-joined");
+      socket.off("user-left");
+    };
+  }, [currentUserEmail, adminEmail, dispatch, activeUsers]);
+
+  console.log("room users  is ", activeUsers);
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  // useEffect hooks
+  useEffect(() => {
+    shuffleModeRef.current = shuffleMode;
+  }, [shuffleMode]);
+
+  useEffect(() => {
+    const fetchTracks = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKEND_API}/tracks`
+        );
+
+        // Sort the tracks alphabetically by title
+        const sortedTracks = response.data.sort((a, b) =>
+          a.title.localeCompare(b.title)
+        );
+
+        // setApi(sortedTracks);
+        // setOriginalData(sortedTracks); // Save sorted original data
+        setDisplayData(sortedTracks);
+        setAllTracks(sortedTracks); // full copy
+      } catch (err) {
+        console.error("Error fetching tracks", err);
+      }
+    };
+
+    fetchTracks();
+
+    // Cleanup function to stop all audio when component unmounts
+    return () => {
+      stopAllAudio();
+    };
+  }, []);
+
+  useEffect(() => {
+    getLikedSongs();
+  }, []);
+
+  useEffect(() => {
+    let baseTracks = activePlaylist ? playlistTracks : allTracks;
+
+    if (searchTerm.trim() !== "") {
+      baseTracks = baseTracks.filter(
+        (track) =>
+          track.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          track.singer.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    const finalDisplayData = showFavorites ? likeSongs : baseTracks;
+    setDisplayData(finalDisplayData);
+
+    const stillExists = finalDisplayData.some(
+      (track) => track._id === selectedTrackId
+    );
+    if (!stillExists) {
+      setSelectedTrackId(null);
+    }
+  }, [
+    searchTerm,
+    showFavorites,
+    likeSongs,
+    allTracks,
+    selectedTrackId,
+    activePlaylist,
+    playlistTracks,
+  ]);
+
+  useEffect(() => {
+    // Update loop status for current audio when looping state changes
+    if (playingIndex !== null && audioRefs.current[playingIndex]) {
+      audioRefs.current[playingIndex].loop = isLooping;
+    }
+  }, [isLooping, playingIndex]); // Added playingIndex to dependency array
+
+  useEffect(() => {
+    const handleRouteChange = () => {
+      stopAllAudio();
+    };
+
+    window.addEventListener("popstate", handleRouteChange);
+
+    return () => {
+      window.removeEventListener("popstate", handleRouteChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.code === "Space" && e.target.tagName !== "INPUT") {
+        e.preventDefault(); // Prevent page scrolling on space press
+        handlePlaybackToggle();
+      }
+      // If "D" key is pressed and not in input, dispatch room status
+      if (e.key.toLowerCase() === "d" && e.target.tagName !== "INPUT") {
+        handleRoomStatus();
+      }
+    };
+
+    // Add event listener
+    document.addEventListener("keydown", handleKeyDown);
+
+    // Remove event listener on cleanup
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handlePlaybackToggle, handleRoomStatus]);
+
+  useEffect(() => {
+    if (isLogin) {
+      fetchPlaylists();
+    }
+  }, [dispatch, isLogin, fetchPlaylists]);
 
   useEffect(() => {
     if (showFavorites && activePlaylist) {
@@ -584,7 +882,7 @@ const Product = () => {
     if (showFavorites) {
       setActivePlaylist(null);
       setAllTracksActive(false);
-      setRemoveTrack(false)
+      setRemoveTrack(false);
     }
   }, [activePlaylist, showFavorites]);
 
@@ -593,37 +891,18 @@ const Product = () => {
       const isTrackInPlaylist = displayData.some(
         (track) => track.title === playingTrackTitle
       );
-          isTrackInPlaylist ? setRemoveTrack(true) : setRemoveTrack(false)
-
+      isTrackInPlaylist ? setRemoveTrack(true) : setRemoveTrack(false);
     }
   }, [activePlaylist, playingTrackTitle, displayData]);
 
-  const handlRemoveFromPlaylist = async (trackId) => {
-    try {
-      const token = localStorage.getItem("google_token");
+  // Computed values
+  const currentTrack =
+    displayData.find((track) => track._id === selectedTrackId) || null;
 
-      const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_API}/remove-from-playlist`,
-        {playlistName : activePlaylist,
-          trackId : playingTrackId
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log(response.data)
-
-      if(response.status === 200){
-        toast.success(response.data.message);
-        handlePlaylistTrack(activePlaylist)
-      }
-    }catch(err) {
-      console.log(err)
-    }
-  }
+  const isFavorite =
+    currentTrack &&
+    likeSongs.some((track) => track._id === currentTrack._id) &&
+    allTracks.some((track) => track._id === currentTrack._id);
 
   // console.log(removeTrack)
   // console.log(activePlaylist)
@@ -638,6 +917,8 @@ const Product = () => {
   return (
     <div className="product-container">
       <div className="product-sort">
+        {/* <button onClick={handleCreateRoom}>Create Room</button>
+        <button onClick={handleJoinRoom}>Join Room</button> */}
         <div className="product-container-title">
           <h1>{showFavorites ? "Liked" : "Trending"}</h1>
           <h1 className="product-clr">Music.</h1>
@@ -710,6 +991,9 @@ const Product = () => {
         ))}
       </div>
 
+      <div className="playlist-section-border"></div>
+
+      {activeUsers.length > 0 && <Activeusers />}
       <div
         className={`product-wrapper ${
           searchTerm.trim() !== "" || showFavorites
@@ -945,7 +1229,7 @@ const Product = () => {
                 alt=""
                 className="playlist-add-icon"
                 onClick={() => {
-                  handlRemoveFromPlaylist()
+                  handlRemoveFromPlaylist();
                 }}
               />
             ) : (
@@ -984,6 +1268,33 @@ const Product = () => {
             <h6 className="progress-bar-time">{formatTime(duration)}</h6>
           </div>
         </motion.div>
+        {roomStatus && (
+          <motion.div
+            key="room-status-modal" // ✅ Add this
+            className="auth-overlay"
+            onClick={closeRoomStatus}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="auth-modal"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <h2 style={{ color: "#333" }}>Room Status</h2>{" "}
+              <button className="join-btn" onClick={handleCreateRoom}>
+                Create Room
+              </button>
+              <button className="cancel-btn" onClick={handleJoinRoom}>
+                Join Room
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

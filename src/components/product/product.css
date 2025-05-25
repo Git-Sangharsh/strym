@@ -70,7 +70,8 @@
         box-shadow 0.4s ease,
         border 0.4s ease;
     /* border: 2px solid red; */
-    width: calc((100% / 4) - 15px); /* Play with gap compensation */
+    width: calc((100% / 4) - 15px);
+    /* Play with gap compensation */
 
 
 }
@@ -268,7 +269,7 @@ audio {
     cursor: pointer;
 }
 
-.trash-icon-white{
+.trash-icon-white {
     width: 20px !important;
     height: 20px !important;
     cursor: pointer;
@@ -426,7 +427,7 @@ audio {
     cursor: pointer;
 }
 
-.all-track-title{
+.all-track-title {
     text-align: start;
     padding: 1rem;
     font-size: 1rem;
@@ -434,14 +435,15 @@ audio {
     cursor: pointer;
 }
 
-.all-track-title-active{
+.all-track-title-active {
     color: #11CD91;
     text-align: start;
     padding: 1rem;
     font-size: 1rem;
     cursor: pointer;
 }
-.main-like-songs-paddiing{
+
+.main-like-songs-paddiing {
     padding: 1rem !important;
 }
 
@@ -454,7 +456,12 @@ audio {
     /* Adds space between grid items */
     width: 93.8%;
     font-size: 1rem;
+}
 
+
+.playlist-section-border{
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.499);
+    width: 100%;
 }
 
 .playlist-section-div {
@@ -487,28 +494,45 @@ audio {
     transition: all 0.3s ease-in-out;
 }
 
-.playlist-section-title:hover{
+.playlist-section-title:hover {
     color: #11CD91 !important;
 
 
 }
 
-.clr-white{
+.clr-white {
     color: white;
+}
+
+.join-btn {
+    margin-top: 1rem;
+    background: #11CD91;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease-in-out;
+}
+
+.join-btn:hover {
+    background: #11CD91;
 }
 
 /* Responsive Design */
 @media screen and (max-width: 1200px) {
     .product-box {
-      width: calc((100% - 40px) / 3); /* 2 gaps of 20px each */
+        width: calc((100% - 40px) / 3);
+        /* 2 gaps of 20px each */
     }
-  }
+}
 
-  @media screen and (max-width: 900px) {
+@media screen and (max-width: 900px) {
     .product-box {
-      width: calc((100% - 20px) / 2); /* 20px gap between 2 items */
+        width: calc((100% - 20px) / 2);
+        /* 20px gap between 2 items */
     }
-  }
+}
 
 
 @media screen and (max-width: 768px) {

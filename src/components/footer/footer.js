@@ -27,7 +27,10 @@ const Footer = () => {
 
   const handleShowPlaylist = ()  => {
     dispatch({ type: 'TOGGLE_ADD_PLAYLIST' });
+  }
 
+  const handleRoomStatus = () =>  {
+    dispatch({type: 'SET_ROOM_STATUS', payload: true})
   }
 
   return (
@@ -42,6 +45,7 @@ const Footer = () => {
             <div className="footer-left-social">
             <h4 className='footer-right-link' onClick={toggleSuggest} >Suggest Music</h4>
             <h4 className='footer-right-link' onClick={handleAuth}>Auth</h4>
+            <h4 className='footer-right-link' onClick={handleRoomStatus}>Room</h4>
             <h4 className='footer-right-link' onClick={handleShowPlaylist}>show  Playlist</h4>
             <h4 className='footer-right-link' onClick={handleAdmin}>Admin</h4>
             <h4 className='footer-right-link'>Contact Us</h4>

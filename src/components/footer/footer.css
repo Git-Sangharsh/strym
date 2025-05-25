@@ -3,15 +3,15 @@
     align-items: center;
     justify-content: center;
     background-color: #18181A;
-    padding-bottom: 120px;
-    height: max-content;
+    /* padding-bottom: 120px; */
+    /* height: max-content; */
 }
 
 .footer-wrapper{
     display: flex ;
     justify-content: space-between;
     background-color: #18181A;
-    height: 20vh;
+    /* height: 20vh; */
     width: 90%;
     padding: 20px 0px;
 }
@@ -84,4 +84,12 @@
 
 .social-icon:hover{
     scale: 1.2;
+}
+
+@media (max-width: 375px){
+    .footer-left-social{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        place-items: start;
+    }
 }

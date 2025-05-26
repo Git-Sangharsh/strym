@@ -568,6 +568,9 @@ const Product = () => {
 
           // Dispatch to update active users in state
           dispatch({ type: "SET_ACTIVE_USERS", payload: updatedActiveUsers });
+          dispatch({ type: "SET_ROOM_STATUS", payload: !roomStatus }); //closing room box
+          toast.success("room created succesfully!")
+
         } else {
           console.error("❌ Failed to create room:", message);
         }
@@ -595,6 +598,8 @@ const Product = () => {
           setAdminEmail(admin);
           console.log("👑 Admin is:", admin);
           console.log("👥 Members:", members);
+          dispatch({ type: "SET_ROOM_STATUS", payload: !roomStatus }); //closing room box
+          toast.success("room join succefully!")
         } else {
           console.error("❌ Failed to join room:", message);
         }
@@ -747,7 +752,7 @@ const Product = () => {
     };
   }, [currentUserEmail, adminEmail, dispatch, activeUsers]);
 
-  console.log("room users  is ", activeUsers);
+  // console.log("room users  is ", activeUsers);
   // Clean up on unmount
   useEffect(() => {
     return () => {
@@ -913,6 +918,7 @@ const Product = () => {
   // console.log("playingIndex", playingIndex);
   // console.log("currentTrack", playingTrackTitle);
   // console.log("showFavorites", showFavorites);
+  console.log("current time  is", currentTime)
 
   return (
     <div className="product-container">
